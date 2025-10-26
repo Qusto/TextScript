@@ -1,0 +1,31 @@
+[tool.poetry]
+name = "text-script"
+version = "0.0.1"
+description = "Style Article Generator - Analyze writing style and generate articles using LLM"
+authors = ["Qusto <teterinsa@gmail.com>"]
+readme = "README.md"
+packages = [{include = "src"}]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+openai = "^1.0"
+requests = "^2.31"
+beautifulsoup4 = "^4.12"
+lxml = "^5.3"
+python-dotenv = "^1.0"
+loguru = "^0.7"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.4"
+pytest-cov = "^4.1"
+pytest-mock = "^3.12"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
+python_functions = "test_*"
+addopts = "-v --tb=short"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
