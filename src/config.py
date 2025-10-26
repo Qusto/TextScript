@@ -11,6 +11,7 @@ class Configuration:
 
     Attributes:
         api_key: OpenRouter API key (required)
+        model: LLM model identifier (default: gpt-4o-mini)
         max_urls: Maximum number of URLs to process from links.txt
         max_content_per_url: Maximum characters to extract per URL
         max_total_content: Maximum total characters for style analysis
@@ -18,6 +19,7 @@ class Configuration:
     """
 
     api_key: str
+    model: str = "openai/gpt-4o-mini"
     max_urls: int = 10
     max_content_per_url: int = 5000
     max_total_content: int = 8000
@@ -66,6 +68,7 @@ def load_config(env_file: str = ".env") -> Configuration:
 
     return Configuration(
         api_key=os.getenv("OPENAI_API_KEY", ""),
+        model=os.getenv("MODEL", "openai/gpt-4o-mini"),
         max_urls=get_int("MAX_URLS", 10),
         max_content_per_url=get_int("MAX_CONTENT_LENGTH_PER_URL", 5000),
         max_total_content=get_int("MAX_TOTAL_CONTENT_LENGTH", 8000),

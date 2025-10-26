@@ -27,8 +27,13 @@ def fetch_url(url: str, timeout: int = 30) -> str | None:
     Raises:
         None - all exceptions are caught and logged
     """
+    # Add User-Agent header to avoid 403 blocks from sites like Wikipedia
+    headers = {
+        "User-Agent": "Mozilla/5.0 (compatible; StyleArticleBot/1.0; +https://github.com/Qusto/TextScript)"
+    }
+
     try:
-        response = requests.get(url, timeout=timeout)
+        response = requests.get(url, timeout=timeout, headers=headers)
         response.raise_for_status()
         return response.text
     except requests.Timeout:

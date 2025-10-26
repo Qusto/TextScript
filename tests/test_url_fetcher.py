@@ -207,7 +207,10 @@ class TestFetchURL:
 
         result = fetch_url("https://example.com", timeout=30)
 
-        mock_get.assert_called_once_with("https://example.com", timeout=30)
+        # Verify headers are included
+        call_kwargs = mock_get.call_args.kwargs
+        assert "headers" in call_kwargs
+        assert "User-Agent" in call_kwargs["headers"]
         assert result == "<html><body>Test content</body></html>"
 
     def test_fetch_url_timeout(self, mocker):
@@ -255,7 +258,9 @@ class TestFetchURL:
 
         fetch_url("https://example.com", timeout=60)
 
-        mock_get.assert_called_once_with("https://example.com", timeout=60)
+        # Verify timeout is used
+        call_kwargs = mock_get.call_args.kwargs
+        assert call_kwargs["timeout"] == 60
 
 
 class TestExtractTextFromHTML:

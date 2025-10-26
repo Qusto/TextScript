@@ -1,6 +1,10 @@
 # Environment variables
 .env
 
+# User input files
+links.txt
+topic.txt
+
 # Generated content
 output.txt
 
