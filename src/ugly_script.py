@@ -1,7 +1,6 @@
 """Main entry point for the style article generator."""
 
 import sys
-import hashlib
 from pathlib import Path
 from loguru import logger
 
@@ -9,6 +8,7 @@ from src.config import load_config
 from src.url_fetcher import fetch_url, extract_text_from_html
 from src.models import URLSource, ContentCollection, StyleProfile, GeneratedArticle
 from src.llm_client import LLMClient
+from src.style_cache import StyleCache, generate_url_hash
 
 
 def configure_logging():
@@ -128,20 +128,6 @@ def fetch_and_extract_content(
     return collection
 
 
-def generate_url_hash(urls: list[str]) -> str:
-    """Generate MD5 hash from sorted URLs for cache key.
-
-    Args:
-        urls: List of URLs
-
-    Returns:
-        MD5 hash hex string
-    """
-    sorted_urls = sorted(urls)
-    combined = "".join(sorted_urls)
-    return hashlib.md5(combined.encode()).hexdigest()
-
-
 def main():
     """Main entry point for style article generator."""
     configure_logging()
@@ -165,14 +151,28 @@ def main():
             logger.error("✗ No content could be fetched from any URL")
             sys.exit(1)
 
-        # Initialize LLM client
+        # Initialize LLM client and cache
         client = LLMClient(api_key=config.api_key, model=config.model)
+        cache = StyleCache()
 
-        # Analyze writing style
+        # Check cache for existing style profile
         logger.info("")
-        logger.info("Analyzing writing style...")
-        style_profile_text = client.analyze_style(collection.combined_content)
-        logger.success("✓ Style analysis complete")
+        cached_profile = cache.load_from_cache(urls)
+
+        if cached_profile:
+            logger.success("✓ Using cached style profile")
+            style_profile_text = cached_profile
+            is_cached = True
+        else:
+            # Analyze writing style with LLM
+            logger.info("Analyzing writing style...")
+            style_profile_text = client.analyze_style(collection.combined_content)
+            logger.success("✓ Style analysis complete")
+
+            # Save to cache
+            cache.save_to_cache(urls, style_profile_text)
+            logger.info("  Saved style profile to cache")
+            is_cached = False
 
         # Create style profile object
         url_hash = generate_url_hash(urls)
@@ -180,7 +180,7 @@ def main():
             profile_text=style_profile_text,
             source_urls=urls,
             url_hash=url_hash,
-            cached=False,
+            cached=is_cached,
         )
 
         # Generate article

@@ -243,17 +243,17 @@ cat output.txt
 
 ### Tasks
 
-- [ ] T050 Grep AICODE comments in src/style_cache.py area
-- [ ] T051 [P] [US6] Write tests for generate_url_hash() in tests/test_style_cache.py
-- [ ] T052 [P] [US6] Implement generate_url_hash() with MD5 of sorted URLs in src/style_cache.py
-- [ ] T053 [US6] Add AICODE-NOTE on MD5 choice (no security needed for cache keys)
-- [ ] T054 [P] [US6] Write tests for load_from_cache() and save_to_cache() in tests/test_style_cache.py
-- [ ] T055 [US6] Implement StyleCache class with load/save methods in src/style_cache.py
-- [ ] T056 [US6] Integrate StyleCache into main() workflow in src/ugly_script.py
-- [ ] T057 [US6] Add Loguru message "Using cached style profile" when cache hit
-- [ ] T058 [US6] Verify cache tests pass: poetry run pytest tests/test_style_cache.py -v
+- [X] T050 Grep AICODE comments in src/style_cache.py area
+- [X] T051 [P] [US6] Write tests for generate_url_hash() in tests/test_style_cache.py
+- [X] T052 [P] [US6] Implement generate_url_hash() with MD5 of sorted URLs in src/style_cache.py
+- [X] T053 [US6] Add AICODE-NOTE on MD5 choice (no security needed for cache keys)
+- [X] T054 [P] [US6] Write tests for load_from_cache() and save_to_cache() in tests/test_style_cache.py
+- [X] T055 [US6] Implement StyleCache class with load/save methods in src/style_cache.py
+- [X] T056 [US6] Integrate StyleCache into main() workflow in src/ugly_script.py
+- [X] T057 [US6] Add Loguru message "Using cached style profile" when cache hit
+- [X] T058 [US6] Verify cache tests pass: poetry run pytest tests/test_style_cache.py -v
 - [ ] T059 [US6] Manual test: Run twice with same URLs, verify second run skips analysis
-- [ ] T060 [US6] Commit US6: "feat: add style profile caching (US6)"
+- [X] T060 [US6] Commit US6: "feat: add style profile caching (US6)"
 
 **Acceptance Verification**:
 ```bash
