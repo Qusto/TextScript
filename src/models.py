@@ -149,3 +149,24 @@ class GeneratedArticle:
         """Print article to console."""
         print("\n--- YOUR ARTICLE ---")
         print(self.content)
+
+    def save_to_file(self, filename: str = "output.txt") -> None:
+        """Save article content to file.
+
+        Args:
+            filename: Output file path (default: output.txt)
+        """
+        from pathlib import Path
+        from loguru import logger
+
+        output_path = Path(filename)
+
+        # Create parent directories if needed
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+
+        try:
+            output_path.write_text(self.content, encoding="utf-8")
+            logger.debug(f"Saved article to {filename}")
+        except Exception as e:
+            logger.error(f"Failed to save article to {filename}: {e}")
+            raise

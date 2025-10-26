@@ -198,6 +198,10 @@ def main():
         logger.info("")
         article.print_to_stdout()
 
+        # Save article to file
+        article.save_to_file("output.txt")
+        logger.success("✓ Article saved to output.txt")
+
         logger.info("")
         logger.success(
             f"✓ Article generated successfully ({article.word_count} words)"

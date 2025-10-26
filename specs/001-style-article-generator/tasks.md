@@ -213,11 +213,11 @@ poetry run python src/ugly_script.py
 
 ### Tasks
 
-- [ ] T045 [P] [US2] Write test for save_to_file() in tests/test_integration.py
-- [ ] T046 [P] [US2] Implement save_to_file() in GeneratedArticle class in src/models.py
-- [ ] T047 [US2] Add save_to_file() call in main() after stdout print in src/ugly_script.py
-- [ ] T048 [US2] Verify file output test passes: poetry run pytest tests/test_integration.py::test_file_output -v
-- [ ] T049 [US2] Commit US2: "feat: add file output to output.txt (US2)"
+- [X] T045 [P] [US2] Write test for save_to_file() in tests/test_integration.py
+- [X] T046 [P] [US2] Implement save_to_file() in GeneratedArticle class in src/models.py
+- [X] T047 [US2] Add save_to_file() call in main() after stdout print in src/ugly_script.py
+- [X] T048 [US2] Verify file output test passes: poetry run pytest tests/test_integration.py::test_file_output -v
+- [X] T049 [US2] Commit US2: "feat: add file output to output.txt (US2)"
 
 **Acceptance Verification**:
 ```bash
