@@ -67,15 +67,15 @@ After MVP, add features incrementally:
 
 ### Tasks
 
-- [ ] T001 Initialize Poetry project with pyproject.toml in project root
-- [ ] T002 Add dependencies: openai, requests, beautifulsoup4, lxml, python-dotenv, loguru
-- [ ] T003 Add dev dependencies: pytest, pytest-cov, pytest-mock
-- [ ] T004 Create src/ directory structure (ugly_script.py, config.py, url_fetcher.py, prompt_manager.py, style_cache.py, llm_client.py, models.py)
-- [ ] T005 Create tests/ directory structure (test_config.py, test_url_fetcher.py, test_prompt_manager.py, test_style_cache.py, test_llm_client.py, test_integration.py)
-- [ ] T006 Create .env.example with template configuration
-- [ ] T007 Create .gitignore (add .env, style_profiles/, output.txt, __pycache__/, .pytest_cache/)
-- [ ] T008 Create README.md with quickstart instructions
-- [ ] T009 Run poetry install to verify setup
+- [X] T001 Initialize Poetry project with pyproject.toml in project root
+- [X] T002 Add dependencies: openai, requests, beautifulsoup4, lxml, python-dotenv, loguru
+- [X] T003 Add dev dependencies: pytest, pytest-cov, pytest-mock
+- [X] T004 Create src/ directory structure (ugly_script.py, config.py, url_fetcher.py, prompt_manager.py, style_cache.py, llm_client.py, models.py)
+- [X] T005 Create tests/ directory structure (test_config.py, test_url_fetcher.py, test_prompt_manager.py, test_style_cache.py, test_llm_client.py, test_integration.py)
+- [X] T006 Create .env.example with template configuration
+- [X] T007 Create .gitignore (add .env, style_profiles/, output.txt, __pycache__/, .pytest_cache/)
+- [X] T008 Create README.md with quickstart instructions
+- [X] T009 Run poetry install to verify setup
 
 **Independent Test**: `poetry install` succeeds, all directories created, .env.example exists
 
@@ -91,16 +91,16 @@ After MVP, add features incrementally:
 
 ### Tasks
 
-- [ ] T010 Grep for existing AICODE comments in src/
-- [ ] T011 [P] Write tests for Configuration loading in tests/test_config.py
-- [ ] T012 [P] Implement Configuration dataclass in src/config.py (load from .env with defaults)
-- [ ] T013 Add AICODE-NOTE documenting why python-dotenv over os.environ
-- [ ] T014 Verify tests pass for Configuration: poetry run pytest tests/test_config.py -v
-- [ ] T015 [P] Write tests for URLSource and ContentCollection in tests/test_url_fetcher.py
-- [ ] T016 [P] Implement URLSource and ContentCollection dataclasses in src/models.py
-- [ ] T017 Add AICODE-NOTE explaining truncation strategy for content limits
-- [ ] T018 Verify tests pass for models: poetry run pytest tests/test_url_fetcher.py::test_models -v
-- [ ] T019 Commit Phase 2: "feat: add config and data models with TDD"
+- [X] T010 Grep for existing AICODE comments in src/
+- [X] T011 [P] Write tests for Configuration loading in tests/test_config.py
+- [X] T012 [P] Implement Configuration dataclass in src/config.py (load from .env with defaults)
+- [X] T013 Add AICODE-NOTE documenting why python-dotenv over os.environ
+- [X] T014 Verify tests pass for Configuration: poetry run pytest tests/test_config.py -v
+- [X] T015 [P] Write tests for URLSource and ContentCollection in tests/test_url_fetcher.py
+- [X] T016 [P] Implement URLSource and ContentCollection dataclasses in src/models.py
+- [X] T017 Add AICODE-NOTE explaining truncation strategy for content limits
+- [X] T018 Verify tests pass for models: poetry run pytest tests/test_url_fetcher.py::test_models -v
+- [X] T019 Commit Phase 2: "feat: add config and data models with TDD"
 
 **Independent Test**: All Phase 2 tests pass (`poetry run pytest tests/test_config.py tests/test_url_fetcher.py -v`)
 
@@ -123,37 +123,37 @@ After MVP, add features incrementally:
 
 #### URL Fetching (US1)
 
-- [ ] T020 Grep AICODE comments in src/
-- [ ] T021 [P] [US1] Write tests for fetch_url() with requests mocking in tests/test_url_fetcher.py
-- [ ] T022 [P] [US1] Implement fetch_url() with timeout and error handling in src/url_fetcher.py
-- [ ] T023 [US1] Add AICODE-NOTE on using requests over urllib for cleaner error handling
-- [ ] T024 [US1] Verify fetch tests pass: poetry run pytest tests/test_url_fetcher.py::test_fetch -v
+- [X] T020 Grep AICODE comments in src/
+- [X] T021 [P] [US1] Write tests for fetch_url() with requests mocking in tests/test_url_fetcher.py
+- [X] T022 [P] [US1] Implement fetch_url() with timeout and error handling in src/url_fetcher.py
+- [X] T023 [US1] Add AICODE-NOTE on using requests over urllib for cleaner error handling
+- [X] T024 [US1] Verify fetch tests pass: poetry run pytest tests/test_url_fetcher.py::test_fetch -v
 
 #### Text Extraction (US1)
 
-- [ ] T025 [P] [US1] Write tests for extract_text_from_html() in tests/test_url_fetcher.py
-- [ ] T026 [P] [US1] Implement extract_text_from_html() with BeautifulSoup + lxml in src/url_fetcher.py
-- [ ] T027 [US1] Add AICODE-NOTE on filtering script/style/nav elements
-- [ ] T028 [US1] Verify extraction tests pass: poetry run pytest tests/test_url_fetcher.py::test_extract -v
+- [X] T025 [P] [US1] Write tests for extract_text_from_html() in tests/test_url_fetcher.py
+- [X] T026 [P] [US1] Implement extract_text_from_html() with BeautifulSoup + lxml in src/url_fetcher.py
+- [X] T027 [US1] Add AICODE-NOTE on filtering script/style/nav elements
+- [X] T028 [US1] Verify extraction tests pass: poetry run pytest tests/test_url_fetcher.py::test_extract -v
 
 #### LLM Integration (US1)
 
-- [ ] T029 [P] [US1] Write tests for LLMClient with OpenAI SDK mocking in tests/test_llm_client.py
-- [ ] T030 [P] [US1] Implement LLMClient with OpenRouter base URL in src/llm_client.py
-- [ ] T031 [US1] Add AICODE-NOTE on OpenRouter API endpoint configuration
-- [ ] T032 [US1] Implement StyleProfile and GeneratedArticle dataclasses in src/models.py
-- [ ] T033 [US1] Verify LLM client tests pass: poetry run pytest tests/test_llm_client.py -v
+- [X] T029 [P] [US1] Write tests for LLMClient with OpenAI SDK mocking in tests/test_llm_client.py
+- [X] T030 [P] [US1] Implement LLMClient with OpenRouter base URL in src/llm_client.py
+- [X] T031 [US1] Add AICODE-NOTE on OpenRouter API endpoint configuration
+- [X] T032 [US1] Implement StyleProfile and GeneratedArticle dataclasses in src/models.py
+- [X] T033 [US1] Verify LLM client tests pass: poetry run pytest tests/test_llm_client.py -v
 
 #### Main Script (US1)
 
-- [ ] T034 [US1] Write integration test for end-to-end flow in tests/test_integration.py
-- [ ] T035 [US1] Implement main() function in src/ugly_script.py orchestrating full workflow
-- [ ] T036 [US1] Configure Loguru with colored output format at script startup
-- [ ] T037 [US1] Add progress logging for each major step (fetching, analyzing, generating)
-- [ ] T038 [US1] Add AICODE-NOTE on Loguru format string for CLI aesthetics
-- [ ] T039 [US1] Verify integration test passes: poetry run pytest tests/test_integration.py -v
-- [ ] T040 [US1] Manual test: Create sample links.txt, topic.txt, .env and run script
-- [ ] T041 [US1] Commit US1: "feat: implement core article generation (US1)"
+- [X] T034 [US1] Write integration test for end-to-end flow in tests/test_integration.py
+- [X] T035 [US1] Implement main() function in src/ugly_script.py orchestrating full workflow
+- [X] T036 [US1] Configure Loguru with colored output format at script startup
+- [X] T037 [US1] Add progress logging for each major step (fetching, analyzing, generating)
+- [X] T038 [US1] Add AICODE-NOTE on Loguru format string for CLI aesthetics
+- [X] T039 [US1] Verify integration test passes: poetry run pytest tests/test_integration.py -v
+- [X] T040 [US1] Manual test: Create sample links.txt, topic.txt, .env and run script
+- [X] T041 [US1] Commit US1: "feat: implement core article generation (US1)"
 
 **Acceptance Verification**:
 ```bash
@@ -283,16 +283,16 @@ poetry run python src/ugly_script.py
 
 ### Tasks
 
-- [ ] T061 Grep AICODE comments in src/prompt_manager.py area
-- [ ] T062 [P] [US4] Write tests for PromptTemplate.render() in tests/test_prompt_manager.py
-- [ ] T063 [P] [US4] Implement PromptTemplate class with str.format() rendering in src/prompt_manager.py
-- [ ] T064 [US4] Add AICODE-NOTE on choosing str.format over Jinja2 for simplicity
-- [ ] T065 [US4] Write tests for load_template() with file fallback in tests/test_prompt_manager.py
-- [ ] T066 [US4] Implement load_template() with default prompts fallback in src/prompt_manager.py
-- [ ] T066a [P] [US4] Implement default prompt constants (DEFAULT_STYLE_ANALYSIS, DEFAULT_ARTICLE_GENERATION) in src/prompt_manager.py
-- [ ] T067 [US4] Integrate PromptManager into main() for both prompts in src/ugly_script.py
-- [ ] T068 [US4] Verify prompt tests pass: poetry run pytest tests/test_prompt_manager.py -v
-- [ ] T069 [US4] Commit US4: "feat: add custom prompt support (US4)"
+- [X] T061 Grep AICODE comments in src/prompt_manager.py area
+- [X] T062 [P] [US4] Write tests for PromptTemplate.render() in tests/test_prompt_manager.py
+- [X] T063 [P] [US4] Implement PromptTemplate class with str.format() rendering in src/prompt_manager.py
+- [X] T064 [US4] Add AICODE-NOTE on choosing str.format over Jinja2 for simplicity
+- [X] T065 [US4] Write tests for load_template() with file fallback in tests/test_prompt_manager.py
+- [X] T066 [US4] Implement load_template() with default prompts fallback in src/prompt_manager.py
+- [X] T066a [P] [US4] Implement default prompt constants (DEFAULT_STYLE_ANALYSIS, DEFAULT_ARTICLE_GENERATION) in src/prompt_manager.py
+- [X] T067 [US4] Integrate PromptManager into main() for both prompts in src/ugly_script.py
+- [X] T068 [US4] Verify prompt tests pass: poetry run pytest tests/test_prompt_manager.py -v
+- [X] T069 [US4] Commit US4: "feat: add custom prompt support (US4)"
 
 **Acceptance Verification**:
 ```bash
