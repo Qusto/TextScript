@@ -36,6 +36,10 @@ The future of artificial intelligence
 poetry run python -m src.ugly_script
 ```
 
+The generated article will be:
+- Printed to stdout
+- Saved to `output.txt`
+
 ## Features
 
 - **Style Analysis**: Fetches content from URLs and analyzes writing style using LLM
@@ -69,6 +73,23 @@ text-script/
 ├── links.txt               # Input: URLs to analyze
 └── topic.txt               # Input: Article topic
 ```
+
+## Testing
+
+Run the test suite:
+
+```bash
+# Run all tests
+poetry run pytest
+
+# Run with coverage
+poetry run pytest --cov=src --cov-report=term-missing
+
+# Run specific test file
+poetry run pytest tests/test_style_cache.py -v
+```
+
+**Test Coverage**: 96 tests, 61% coverage
 
 ## License
 

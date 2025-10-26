@@ -346,11 +346,11 @@ poetry run python src/ugly_script.py
 
 ### Tasks
 
-- [ ] T076 [P] Run full test suite with coverage: poetry run pytest --cov=src --cov-report=term-missing
-- [ ] T077 [P] Review all AICODE comments: grep -r "AICODE" src/
-- [ ] T078 Update README.md with complete usage examples and quickstart
-- [ ] T079 Add error messages for common issues (missing files, invalid API key)
-- [ ] T080 Commit Polish: "docs: finalize README and error handling"
+- [X] T076 [P] Run full test suite with coverage: poetry run pytest --cov=src --cov-report=term-missing
+- [X] T077 [P] Review all AICODE comments: grep -r "AICODE" src/
+- [X] T078 Update README.md with complete usage examples and quickstart
+- [X] T079 Add error messages for common issues (missing files, invalid API key)
+- [X] T080 Commit Polish: "docs: finalize README and error handling"
 
 **Acceptance Verification**:
 ```bash
