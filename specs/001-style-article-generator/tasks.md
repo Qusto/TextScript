@@ -185,9 +185,9 @@ poetry run python src/ugly_script.py
 
 ### Tasks
 
-- [ ] T042 [P] [US3] Write test for single URL scenario in tests/test_integration.py
-- [ ] T043 [US3] Verify ContentCollection handles list with 1 element correctly
-- [ ] T044 [US3] Commit US3: "feat: validate single URL support (US3)"
+- [X] T042 [P] [US3] Write test for single URL scenario in tests/test_integration.py
+- [X] T043 [US3] Verify ContentCollection handles list with 1 element correctly
+- [X] T044 [US3] Commit US3: "feat: validate single URL support (US3)"
 
 **Acceptance Verification**:
 ```bash

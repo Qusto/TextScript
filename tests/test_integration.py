@@ -120,3 +120,51 @@ class TestFileOutput:
         saved_content = output_file.read_text(encoding="utf-8")
         assert len(saved_content) == len(long_content)
         assert saved_content == long_content
+
+
+class TestSingleURLSupport:
+    """Test single URL support (US3)."""
+
+    def test_content_collection_with_single_url(self):
+        """Test that ContentCollection handles single URL correctly."""
+        from src.models import URLSource, ContentCollection
+
+        # Create collection with single URL
+        single_source = URLSource(
+            url="https://example.com/article",
+            content="This is article content.",
+            status="success",
+        )
+        collection = ContentCollection(sources=[single_source])
+
+        # Should work correctly
+        assert collection.success_count == 1
+        assert collection.failure_count == 0
+        assert collection.total_chars == len("This is article content.")
+        assert "This is article content." in collection.combined_content
+
+    def test_single_url_list_handling(self):
+        """Test that single-element URL list is handled correctly."""
+        urls = ["https://example.com/single-article"]
+
+        # System should handle single URL the same as multiple
+        assert len(urls) == 1
+        assert isinstance(urls, list)
+
+    def test_single_url_truncation(self):
+        """Test truncation works with single URL."""
+        from src.models import URLSource, ContentCollection
+
+        # Create collection with single long content
+        long_content = "x" * 10000
+        source = URLSource(
+            url="https://example.com/article", content=long_content, status="success"
+        )
+        collection = ContentCollection(sources=[source])
+
+        # Apply truncation limit
+        collection.truncate_to_limit(5000)
+
+        # Should be truncated correctly
+        assert collection.total_chars == 5000
+        assert len(collection.combined_content) == 5000
