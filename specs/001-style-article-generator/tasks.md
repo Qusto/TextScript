@@ -319,12 +319,12 @@ poetry run python src/ugly_script.py
 
 ### Tasks
 
-- [ ] T070 [P] [US5] Write tests for limit enforcement in tests/test_url_fetcher.py
-- [ ] T071 [P] [US5] Implement limit checks in URLFetcher (max_urls, content truncation) in src/url_fetcher.py
-- [ ] T072 [US5] Apply URL_FETCH_TIMEOUT to requests.get() calls in src/url_fetcher.py
-- [ ] T073 [US5] Add AICODE-NOTE on default values rationale (from research.md)
-- [ ] T074 [US5] Verify limit tests pass: poetry run pytest tests/test_url_fetcher.py::test_limits -v
-- [ ] T075 [US5] Commit US5: "feat: add configurable content limits (US5)"
+- [X] T070 [P] [US5] Write tests for limit enforcement in tests/test_url_fetcher.py
+- [X] T071 [P] [US5] Implement limit checks in URLFetcher (max_urls, content truncation) in src/url_fetcher.py
+- [X] T072 [US5] Apply URL_FETCH_TIMEOUT to requests.get() calls in src/url_fetcher.py
+- [X] T073 [US5] Add AICODE-NOTE on default values rationale (from research.md)
+- [X] T074 [US5] Verify limit tests pass: poetry run pytest tests/test_url_fetcher.py::test_limits -v
+- [X] T075 [US5] Commit US5: "feat: add configurable content limits (US5)"
 
 **Acceptance Verification**:
 ```bash
