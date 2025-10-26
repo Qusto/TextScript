@@ -34,11 +34,12 @@ This task breakdown follows **Test-Driven Development (TDD)** with **AICODE comm
 ### Incremental Delivery
 
 After MVP, add features incrementally:
-1. **User Story 3** (P1): Single URL support (already in MVP)
-2. **User Story 2** (P2): File output
-3. **User Story 6** (P2): Caching
-4. **User Story 4** (P2): Custom prompts
-5. **User Story 5** (P3): Configurable limits
+1. **User Story 3** (P1): Single URL support ✅ COMPLETE
+2. **User Story 2** (P2): File output ✅ COMPLETE
+3. **User Story 6** (P2): Caching ✅ COMPLETE
+4. **User Story 4** (P2): Custom prompts ✅ COMPLETE
+5. **User Story 5** (P3): Configurable limits ✅ COMPLETE
+6. **User Story 7** (P2): Research-enhanced generation ⏳ NEW
 
 ---
 
@@ -55,7 +56,8 @@ After MVP, add features incrementally:
 | Phase 7 | US4: Custom Prompts | P2 | 10 | 3 |
 | Phase 8 | US5: Config Limits | P3 | 6 | 2 |
 | Phase 9 | Polish | - | 5 | 2 |
-| **Total** | **6 Stories** | - | **81** | **23** |
+| **Phase R** | **US7: Research Enhancement** | **P2** | **31** | **8** |
+| **Total** | **7 Stories** | - | **112** | **31** |
 
 ---
 
@@ -574,6 +576,223 @@ def fetch_url(url: str, timeout: int) -> str:
 - `- [ ] T001 Initialize Poetry project with pyproject.toml in project root`
 - `- [ ] T022 [P] [US1] Implement fetch_url() with timeout and error handling in src/url_fetcher.py`
 - `- [ ] T076 [P] Run full test suite with coverage: poetry run pytest --cov=src`
+
+---
+
+## Phase R: User Story 7 - Research-Enhanced Article Generation (NEW)
+
+**Goal**: Enrich article generation with fresh research data from specialized search models.
+
+**Duration**: ~45 minutes
+
+**Dependencies**: Phase 3 (US1 MVP) and Phase 7 (US4 Custom Prompts) must complete first.
+
+**Independent Test Criteria**:
+1. Given topic.txt with "AI in Healthcare"
+2. When RESEARCH_ENABLED=true in .env
+3. Then research is performed via Perplexity Sonar
+4. And article includes facts, statistics, and citations
+5. And research integrates with author's style preferences
+
+### Phase R1: Configuration & Data Models (Setup)
+
+**Goal**: Add research configuration and data structures.
+
+**Duration**: ~8 minutes
+
+#### Tasks
+
+- [ ] T082 [P] [US7] Add research config fields to Configuration dataclass in src/config.py (research_enabled, research_model)
+- [ ] T083 [P] [US7] Implement StyleHints dataclass in src/models.py (content_depth, technical_level, preferred_sources, focus_areas)
+- [ ] T084 [US7] Implement ResearchResult dataclass in src/models.py (topic, facts_and_stats, quotes_and_sources, full_research_text, sources_count, timestamp)
+- [ ] T085 [US7] Update .env.example with RESEARCH_ENABLED and RESEARCH_MODEL settings
+- [ ] T086 [US7] Add AICODE-NOTE explaining why research is NOT cached (always fresh data)
+
+**Acceptance**:
+```bash
+# Verify config loads research settings
+grep "research_enabled" src/config.py
+grep "RESEARCH_ENABLED" .env.example
+```
+
+---
+
+### Phase R2: Style Hints Extraction
+
+**Goal**: Extract author preferences from style profile to guide research.
+
+**Duration**: ~10 minutes
+
+#### Tasks
+
+- [ ] T087 Grep AICODE comments in src/style_hints_extractor.py area
+- [ ] T088 [P] [US7] Write tests for StyleHintsExtractor in tests/test_style_hints_extractor.py
+- [ ] T089 [P] [US7] Implement StyleHintsExtractor class in src/style_hints_extractor.py
+- [ ] T090 [US7] Create prompts/research_style_hints.txt prompt template
+- [ ] T091 [US7] Add AICODE-NOTE on using LLM extraction vs regex for accuracy
+- [ ] T092 [US7] Verify style hints tests pass: poetry run pytest tests/test_style_hints_extractor.py -v
+
+**Acceptance**:
+```python
+# Example extraction
+style_profile = "Paul Graham writes in conversational tone..."
+extractor = StyleHintsExtractor(api_key="...")
+hints = extractor.extract(style_profile)
+assert hints.content_depth in ["descriptive", "concrete", "balanced"]
+assert hints.technical_level in ["technical", "simple", "mixed"]
+```
+
+---
+
+### Phase R3: Research Client Implementation
+
+**Goal**: Implement research API client using Perplexity Sonar via OpenRouter.
+
+**Duration**: ~12 minutes
+
+#### Tasks
+
+- [ ] T093 Grep AICODE comments in src/research_client.py area
+- [ ] T094 [P] [US7] Write tests for ResearchClient with mocked API in tests/test_research_client.py
+- [ ] T095 [P] [US7] Implement ResearchClient class in src/research_client.py
+- [ ] T096 [US7] Create prompts/research.txt prompt template
+- [ ] T097 [US7] Implement research response parsing into ResearchResult
+- [ ] T098 [US7] Add AICODE-NOTE on Perplexity Sonar via OpenRouter (no separate client needed)
+- [ ] T099 [US7] Verify research client tests pass: poetry run pytest tests/test_research_client.py -v
+
+**Acceptance**:
+```python
+# Example research call
+client = ResearchClient(api_key="...", model="perplexity/sonar-pro")
+result = client.research_topic(
+    topic="AI in Healthcare",
+    style_hints=StyleHints(...)
+)
+assert len(result.facts_and_stats) > 0
+assert len(result.quotes_and_sources) > 0
+assert result.sources_count > 0
+```
+
+---
+
+### Phase R4: Main Workflow Integration
+
+**Goal**: Integrate research stage into main article generation workflow.
+
+**Duration**: ~10 minutes
+
+#### Tasks
+
+- [ ] T100 [US7] Add research stage to main() in src/ugly_script.py (after style analysis, before generation)
+- [ ] T101 [US7] Update LLMClient.generate_article() signature to accept research_data parameter in src/llm_client.py
+- [ ] T102 [US7] Update prompts/article_generation.txt to incorporate research material
+- [ ] T103 [US7] Implement format_research_for_article() utility function in src/research_client.py
+- [ ] T104 [US7] Add Loguru progress messages for research stage
+- [ ] T105 [US7] Add graceful fallback when research_enabled=false
+- [ ] T106 [US7] Add error handling for research API failures (continue without research)
+- [ ] T107 [US7] Add AICODE-NOTE on research workflow position (after style, always fresh)
+
+**Acceptance**:
+```bash
+# Run with research enabled
+echo "RESEARCH_ENABLED=true" >> .env
+echo "RESEARCH_MODEL=perplexity/sonar-pro" >> .env
+poetry run python src/ugly_script.py
+
+# Expected output:
+# ✓ Style analysis complete
+# Extracting style hints for research...
+# ✓ Style hints extracted: balanced style
+# Researching topic: 'Your Topic'...
+# ✓ Research complete: 5 sources
+#   Found 8 facts, 3 quotes
+# Generating article...
+# ✓ Article generation complete
+```
+
+---
+
+### Phase R5: Testing & Polish
+
+**Goal**: End-to-end testing and documentation.
+
+**Duration**: ~5 minutes
+
+#### Tasks
+
+- [ ] T108 [P] [US7] Write integration test for complete research workflow in tests/test_research_integration.py
+- [ ] T109 [US7] Manual test: Generate article with research enabled and verify fact inclusion
+- [ ] T110 [US7] Manual test: Generate article with research disabled and verify fallback works
+- [ ] T111 [US7] Update README.md with research feature documentation
+- [ ] T112 [US7] Commit US7: "feat: add research-enhanced article generation (US7)"
+
+**Acceptance Verification**:
+```bash
+# Full test suite
+poetry run pytest -v
+
+# Manual test with research
+echo "The Impact of Quantum Computing on Cryptography" > topic.txt
+RESEARCH_ENABLED=true poetry run python src/ugly_script.py
+
+# Verify output.txt contains:
+# - Specific facts/statistics
+# - Expert quotes or citations
+# - Research-backed content
+```
+
+---
+
+## Updated Dependency Graph
+
+### Story Completion Order (with US7)
+
+```
+Phase 1: Setup
+    ↓
+Phase 2: Foundational
+    ↓
+Phase 3: US1 (P1) ← MVP COMPLETE
+    ├→ Phase 4: US3 (P1)
+    ├→ Phase 5: US2 (P2)
+    ├→ Phase 6: US6 (P2)
+    ├→ Phase 7: US4 (P2)
+    ├→ Phase 8: US5 (P3)
+    └→ Phase R: US7 (P2) ← NEW: Research Enhancement
+    ↓
+Phase 9: Polish
+```
+
+### US7 Dependencies
+
+- **Requires**: Phase 3 (US1 MVP) - need basic workflow
+- **Requires**: Phase 7 (US4) - need prompt management
+- **Independent of**: US2, US3, US5, US6
+- **Can develop in parallel with**: US2, US3, US5, US6
+
+---
+
+## Phase R Summary
+
+| Metric | Value |
+|--------|-------|
+| Tasks | 31 (T082-T112) |
+| Duration | ~45 minutes |
+| User Story | US7: Research-Enhanced Generation |
+| Priority | P2 (Enhancement) |
+| New Files | 4 (research_client.py, style_hints_extractor.py, 2 prompts) |
+| Modified Files | 5 (config.py, models.py, llm_client.py, ugly_script.py, article_generation.txt) |
+| New Tests | ~30 tests |
+| LOC Added | ~400 lines |
+
+### Key Features
+
+1. **Style-Aware Research**: Extracts author preferences to guide research
+2. **Fresh Data**: Research always executed (no cache) for current information
+3. **Perplexity Sonar**: Uses specialized search model via OpenRouter
+4. **Rich Output**: Facts, quotes, sources integrated into article
+5. **Graceful Fallback**: Works without research if disabled or failed
+6. **Toggle Control**: RESEARCH_ENABLED in .env
 
 ---
 
