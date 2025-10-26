@@ -102,3 +102,50 @@ class ContentCollection:
                     status="success",
                 )
             ]
+
+
+@dataclass
+class StyleProfile:
+    """Store analyzed writing style characteristics.
+
+    Attributes:
+        profile_text: LLM-generated style analysis
+        source_urls: URLs used for analysis
+        url_hash: MD5 hash of sorted URLs (cache key)
+        cached: True if loaded from cache, False if freshly generated
+    """
+
+    profile_text: str
+    source_urls: list[str]
+    url_hash: str
+    cached: bool = False
+
+    @property
+    def cache_filename(self) -> str:
+        """Return cache file path."""
+        return f"style_profiles/{self.url_hash}.txt"
+
+
+@dataclass
+class GeneratedArticle:
+    """Represent the final generated article output.
+
+    Attributes:
+        content: Article text from LLM
+        topic: Original topic from topic.txt
+        style_hash: Hash of source URLs (links to StyleProfile)
+    """
+
+    content: str
+    topic: str
+    style_hash: str
+
+    @property
+    def word_count(self) -> int:
+        """Calculate word count."""
+        return len(self.content.split())
+
+    def print_to_stdout(self) -> None:
+        """Print article to console."""
+        print("\n--- YOUR ARTICLE ---")
+        print(self.content)

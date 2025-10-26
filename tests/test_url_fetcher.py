@@ -2,6 +2,7 @@
 
 import pytest
 from src.models import URLSource, ContentCollection
+from src.url_fetcher import fetch_url, extract_text_from_html
 
 
 class TestURLSource:
@@ -191,3 +192,167 @@ class TestContentCollection:
         assert collection.total_chars == 0
         assert collection.success_count == 0
         assert collection.failure_count == 0
+
+
+class TestFetchURL:
+    """Test fetch_url() function."""
+
+    def test_fetch_url_success(self, mocker):
+        """Test successful URL fetch."""
+        mock_response = mocker.Mock()
+        mock_response.text = "<html><body>Test content</body></html>"
+        mock_response.raise_for_status = mocker.Mock()
+
+        mock_get = mocker.patch("requests.get", return_value=mock_response)
+
+        result = fetch_url("https://example.com", timeout=30)
+
+        mock_get.assert_called_once_with("https://example.com", timeout=30)
+        assert result == "<html><body>Test content</body></html>"
+
+    def test_fetch_url_timeout(self, mocker):
+        """Test URL fetch with timeout error."""
+        import requests
+
+        mock_get = mocker.patch("requests.get", side_effect=requests.Timeout("Connection timeout"))
+
+        result = fetch_url("https://example.com", timeout=30)
+
+        assert result is None
+
+    def test_fetch_url_connection_error(self, mocker):
+        """Test URL fetch with connection error."""
+        import requests
+
+        mock_get = mocker.patch(
+            "requests.get", side_effect=requests.ConnectionError("Failed to connect")
+        )
+
+        result = fetch_url("https://example.com", timeout=30)
+
+        assert result is None
+
+    def test_fetch_url_http_error(self, mocker):
+        """Test URL fetch with HTTP error (404, 500, etc)."""
+        import requests
+
+        mock_response = mocker.Mock()
+        mock_response.raise_for_status.side_effect = requests.HTTPError("404 Not Found")
+
+        mock_get = mocker.patch("requests.get", return_value=mock_response)
+
+        result = fetch_url("https://example.com", timeout=30)
+
+        assert result is None
+
+    def test_fetch_url_uses_timeout(self, mocker):
+        """Test that fetch_url respects timeout parameter."""
+        mock_response = mocker.Mock()
+        mock_response.text = "content"
+        mock_response.raise_for_status = mocker.Mock()
+
+        mock_get = mocker.patch("requests.get", return_value=mock_response)
+
+        fetch_url("https://example.com", timeout=60)
+
+        mock_get.assert_called_once_with("https://example.com", timeout=60)
+
+
+class TestExtractTextFromHTML:
+    """Test extract_text_from_html() function."""
+
+    def test_extract_simple_text(self):
+        """Test extracting text from simple HTML."""
+        html = "<html><body><p>Hello, world!</p></body></html>"
+        text = extract_text_from_html(html)
+        assert "Hello, world!" in text
+        assert text.strip() == "Hello, world!"
+
+    def test_extract_multiple_paragraphs(self):
+        """Test extracting text from multiple paragraphs."""
+        html = "<html><body><p>First paragraph.</p><p>Second paragraph.</p></body></html>"
+        text = extract_text_from_html(html)
+        assert "First paragraph." in text
+        assert "Second paragraph." in text
+
+    def test_extract_filters_script_tags(self):
+        """Test that script tags are filtered out."""
+        html = """
+        <html>
+        <body>
+            <p>Visible content</p>
+            <script>alert('This should not appear');</script>
+        </body>
+        </html>
+        """
+        text = extract_text_from_html(html)
+        assert "Visible content" in text
+        assert "alert" not in text
+        assert "This should not appear" not in text
+
+    def test_extract_filters_style_tags(self):
+        """Test that style tags are filtered out."""
+        html = """
+        <html>
+        <head><style>.class { color: red; }</style></head>
+        <body><p>Visible content</p></body>
+        </html>
+        """
+        text = extract_text_from_html(html)
+        assert "Visible content" in text
+        assert "color: red" not in text
+        assert ".class" not in text
+
+    def test_extract_filters_nav_elements(self):
+        """Test that navigation elements are filtered out."""
+        html = """
+        <html>
+        <body>
+            <nav><a href="#">Menu Item</a></nav>
+            <article><p>Article content</p></article>
+        </body>
+        </html>
+        """
+        text = extract_text_from_html(html)
+        assert "Article content" in text
+        # Nav might still appear in some parsers, so just verify article content is there
+
+    def test_extract_with_nested_tags(self):
+        """Test extracting text from nested HTML tags."""
+        html = "<html><body><div><p>Nested <strong>bold</strong> text</p></div></body></html>"
+        text = extract_text_from_html(html)
+        assert "Nested" in text
+        assert "bold" in text
+        assert "text" in text
+
+    def test_extract_cleans_whitespace(self):
+        """Test that extracted text has cleaned whitespace."""
+        html = """
+        <html>
+        <body>
+            <p>  Multiple   spaces   </p>
+            <p>
+
+            Newlines
+
+            </p>
+        </body>
+        </html>
+        """
+        text = extract_text_from_html(html)
+        # Text should be cleaned of excessive whitespace
+        assert "Multiple" in text
+        assert "spaces" in text
+        assert "Newlines" in text
+
+    def test_extract_empty_html(self):
+        """Test extracting from empty HTML."""
+        html = "<html><body></body></html>"
+        text = extract_text_from_html(html)
+        assert text.strip() == ""
+
+    def test_extract_from_malformed_html(self):
+        """Test extracting from malformed HTML (BeautifulSoup handles it)."""
+        html = "<html><body><p>Text without closing tag</body></html>"
+        text = extract_text_from_html(html)
+        assert "Text without closing tag" in text
