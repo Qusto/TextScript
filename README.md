@@ -94,7 +94,9 @@ All major architectural choices are documented with `AICODE-NOTE` comments:
 6. **OpenRouter API**: Single endpoint for multiple LLM providers
 7. **Loguru formatting**: Color-coded, time-stamped CLI output
 
-## 📊 Real-World Example
+## 📊 Real-World Examples
+
+### Example 1: Without Research (Baseline)
 
 **Input** (Paul Graham essays):
 ```
@@ -109,6 +111,47 @@ https://www.paulgraham.com/avg.html
 **Performance**:
 - First run: ~27 seconds (fetch + analysis + generation)
 - Second run: ~17 seconds (cached style = 37% faster!)
+
+### Example 2: With Research Enhancement ⭐ NEW
+
+**Same Input** (Paul Graham essays + same topic)
+
+**With `RESEARCH_ENABLED=true`:**
+
+**Research Stage Output:**
+- Style hints extracted: `balanced, mixed, varied`
+- 5 facts gathered from current sources
+- 4 expert quotes with attribution
+- Research time: ~19 seconds (Perplexity Sonar)
+
+**Enhanced Article Output** (786 words):
+```
+"...by 2025, 90% of software professionals have integrated AI into their
+daily workflows, marking a 14% increase from the previous year..."
+
+"...the 2025 DORA Report reveals that 41% of all code was AI-generated
+in 2024, which amounts to an astonishing 256 billion lines of code..."
+
+"...analysts from a16z suggest that AI tools can increase developer
+productivity by approximately 20%, while best-in-class AI integration
+may contribute up to $3 trillion annually to the global economy..."
+
+"As Casey Ciniello from Infragistics puts it, 'AI is accelerating
+innovation, but that innovation must be accompanied by governance,
+testing, and ethical considerations.'"
+```
+
+**Key Improvements:**
+- ✅ **Concrete data**: 6+ specific statistics with numbers
+- ✅ **Current information**: 2024-2025 data points
+- ✅ **Expert attribution**: Named sources and studies
+- ✅ **Style preserved**: Still matches Paul Graham's reflective style
+- ✅ **Fresh facts**: Research NOT cached (always current)
+
+**Performance**:
+- First run with research: ~61 seconds (fetch + analysis + research + generation)
+- Second run with research: ~51 seconds (cached style, fresh research = 16% faster)
+- Research overhead: +19 seconds for significantly richer content
 
 ## 🚀 How It Works
 
@@ -133,11 +176,39 @@ https://www.paulgraham.com/avg.html
 # Result cached to style_profiles/{hash}.txt
 ```
 
-### 3. Article Generation
+### 3. Research Enhancement (Optional - NEW)
+```python
+# IF RESEARCH_ENABLED=true:
+#
+# Step 3a: Extract Style Hints
+# - Analyzes style profile with LLM
+# - Extracts content preferences:
+#   - content_depth: descriptive/concrete/balanced
+#   - technical_level: technical/simple/mixed
+#   - preferred_sources: academic/practical/varied
+#   - focus_areas: key topics to emphasize
+#
+# Step 3b: Perform Research
+# - Uses Perplexity Sonar (RESEARCH_MODEL) for real-time search
+# - Gathers current facts, statistics, expert quotes
+# - Tailors research to match extracted style hints
+# - Parses response into structured data:
+#   - facts_and_stats: list of concrete data points
+#   - quotes_and_sources: expert quotes with attribution
+#   - full_research_text: comprehensive synthesis
+#
+# NOTE: Research is NOT cached (always fresh!)
+```
+
+### 4. Article Generation
 ```python
 # Loads article_generation.txt prompt
-# Combines: topic + style profile
+# Combines: topic + style profile [+ research data if enabled]
 # LLM generates article matching style
+# IF research enabled:
+#   - Integrates facts naturally into narrative
+#   - Adds expert quotes with attribution
+#   - Includes current statistics (2024-2025)
 # Saves to output.txt
 ```
 
