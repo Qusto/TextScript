@@ -29,14 +29,20 @@ class StyleHintsExtractor:
     about the author's preferred content type, technical level, sources, etc.
     """
 
-    def __init__(self, config: Configuration):
+    def __init__(
+        self, config: Configuration, llm_client: LLMClient | None = None
+    ):
         """Initialize extractor with configuration.
 
         Args:
             config: Application configuration with API settings
+            llm_client: Optional LLMClient instance (or CostTracker wrapper).
+                       If not provided, creates a new LLMClient.
         """
         self.config = config
-        self.llm_client = LLMClient(api_key=config.api_key, model=config.model)
+        self.llm_client = llm_client or LLMClient(
+            api_key=config.api_key, model=config.model
+        )
         self.prompt_manager = PromptManager()
 
     def extract(self, style_profile: StyleProfile) -> StyleHints:
@@ -64,7 +70,14 @@ class StyleHintsExtractor:
 
         # Call LLM
         try:
-            response = self.llm_client.generate(prompt)
+            # Check if llm_client is CostTracker (has stage_name parameter)
+            if hasattr(self.llm_client, "generation_ids"):
+                response = self.llm_client.generate(
+                    prompt, stage_name="style_hints_extraction"
+                )
+            else:
+                response = self.llm_client.generate(prompt)
+
             logger.debug(f"LLM response for style hints: {response[:200]}...")
 
             # Parse JSON response

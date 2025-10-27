@@ -12,6 +12,7 @@ from src.style_cache import StyleCache, generate_url_hash
 from src.style_hints_extractor import StyleHintsExtractor
 from src.research_client import ResearchClient
 from src.prompt_manager import PromptManager
+from src.cost_tracker import CostTracker
 
 
 def configure_logging():
@@ -154,8 +155,9 @@ def main():
             logger.error("✗ No content could be fetched from any URL")
             sys.exit(1)
 
-        # Initialize LLM client and cache
+        # Initialize LLM client, cost tracker, and cache
         client = LLMClient(api_key=config.api_key, model=config.model)
+        cost_tracker = CostTracker(client)
         cache = StyleCache()
 
         # Check cache for existing style profile
@@ -167,9 +169,9 @@ def main():
             style_profile_text = cached_profile
             is_cached = True
         else:
-            # Analyze writing style with LLM
+            # Analyze writing style with LLM (tracked for cost)
             logger.info("Analyzing writing style...")
-            style_profile_text = client.analyze_style(collection.combined_content)
+            style_profile_text = cost_tracker.analyze_style(collection.combined_content)
             logger.success("✓ Style analysis complete")
 
             # Save to cache
@@ -194,7 +196,7 @@ def main():
 
             # Extract style hints from profile
             logger.info("Extracting style hints from profile...")
-            hints_extractor = StyleHintsExtractor(config)
+            hints_extractor = StyleHintsExtractor(config, llm_client=cost_tracker)
             style_hints = hints_extractor.extract(style_profile)
             logger.success(
                 f"✓ Style hints extracted: {style_hints.content_depth}, "
@@ -202,7 +204,7 @@ def main():
             )
 
             # Perform research
-            research_client = ResearchClient(config)
+            research_client = ResearchClient(config, llm_client=cost_tracker)
             research_result = research_client.research(topic, style_hints)
             logger.success(
                 f"✓ Research complete: {len(research_result.facts_and_stats)} facts, "
@@ -245,10 +247,12 @@ Please integrate these facts, quotes, and findings naturally into the article.
                 style_profile=style_profile.profile_text + research_context,
             )
 
-            article_content = client.generate(enhanced_prompt)
+            article_content = cost_tracker.generate(enhanced_prompt)
         else:
             # Standard generation without research
-            article_content = client.generate_article(topic, style_profile.profile_text)
+            article_content = cost_tracker.generate_article(
+                topic, style_profile.profile_text
+            )
 
         logger.success("✓ Article generation complete")
 
@@ -264,6 +268,10 @@ Please integrate these facts, quotes, and findings naturally into the article.
         # Save article to file
         article.save_to_file("output.txt")
         logger.success("✓ Article saved to output.txt")
+
+        # Display cost report
+        cost_report = cost_tracker.get_cost_report()
+        cost_report.print_report()
 
         logger.info("")
         logger.success(

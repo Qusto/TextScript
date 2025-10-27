@@ -29,14 +29,18 @@ class ResearchClient:
     quotes, and current information to enrich article generation.
     """
 
-    def __init__(self, config: Configuration):
+    def __init__(self, config: Configuration, llm_client: LLMClient | None = None):
         """Initialize research client with configuration.
 
         Args:
             config: Application configuration with API settings
+            llm_client: Optional LLMClient instance (or CostTracker wrapper).
+                       If not provided, creates a new LLMClient.
         """
         self.config = config
-        self.llm_client = LLMClient(api_key=config.api_key, model=config.model)
+        self.llm_client = llm_client or LLMClient(
+            api_key=config.api_key, model=config.model
+        )
         self.prompt_manager = PromptManager()
 
     def research(self, topic: str, style_hints: StyleHints) -> ResearchResult:
@@ -76,9 +80,16 @@ class ResearchClient:
 
         # Call LLM with research model
         logger.debug(f"Using research model: {self.config.research_model}")
-        response = self.llm_client.generate(
-            prompt, model=self.config.research_model
-        )
+
+        # Check if llm_client is CostTracker (has stage_name parameter)
+        if hasattr(self.llm_client, "generation_ids"):
+            response = self.llm_client.generate(
+                prompt, model=self.config.research_model, stage_name="research"
+            )
+        else:
+            response = self.llm_client.generate(
+                prompt, model=self.config.research_model
+            )
 
         logger.debug(f"Research response length: {len(response)} chars")
 

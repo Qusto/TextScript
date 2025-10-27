@@ -222,3 +222,72 @@ class ResearchResult:
     full_research_text: str = ""
     sources_count: int = 0
     timestamp: datetime = field(default_factory=datetime.now)
+
+
+@dataclass
+class GenerationCost:
+    """Cost information for a single API call to OpenRouter.
+
+    Attributes:
+        model: Model identifier used for generation
+        prompt_tokens: Number of tokens in prompt (native count)
+        completion_tokens: Number of tokens in completion (native count)
+        total_tokens: Total tokens used
+        cost_usd: Cost in USD dollars
+        generation_id: OpenRouter generation ID
+        stage: Stage name (e.g., "style_analysis", "research", "article_generation")
+    """
+
+    model: str
+    prompt_tokens: int
+    completion_tokens: int
+    total_tokens: int
+    cost_usd: float
+    generation_id: str
+    stage: str
+
+
+@dataclass
+class ArticleCostReport:
+    """Aggregated cost report for article generation.
+
+    Attributes:
+        costs: List of individual generation costs
+    """
+
+    costs: list[GenerationCost] = field(default_factory=list)
+
+    @property
+    def total_cost_usd(self) -> float:
+        """Calculate total cost across all API calls."""
+        return sum(c.cost_usd for c in self.costs)
+
+    @property
+    def total_tokens(self) -> int:
+        """Calculate total tokens across all API calls."""
+        return sum(c.total_tokens for c in self.costs)
+
+    def print_report(self) -> None:
+        """Print detailed cost report to console."""
+        from loguru import logger
+
+        if not self.costs:
+            logger.info("No API calls tracked (possibly all cached)")
+            return
+
+        logger.info("")
+        logger.info("=== Cost Report ===")
+
+        # Print each stage
+        for cost in self.costs:
+            logger.info(
+                f"  {cost.stage}: ${cost.cost_usd:.2f} "
+                f"({cost.total_tokens} tokens, model: {cost.model})"
+            )
+
+        # Print total
+        logger.info("  " + "-" * 50)
+        logger.success(
+            f"  Total cost: ${self.total_cost_usd:.2f} "
+            f"({self.total_tokens} total tokens)"
+        )

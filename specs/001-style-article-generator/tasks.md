@@ -254,7 +254,7 @@ cat output.txt
 - [X] T056 [US6] Integrate StyleCache into main() workflow in src/ugly_script.py
 - [X] T057 [US6] Add Loguru message "Using cached style profile" when cache hit
 - [X] T058 [US6] Verify cache tests pass: poetry run pytest tests/test_style_cache.py -v
-- [ ] T059 [US6] Manual test: Run twice with same URLs, verify second run skips analysis
+- [X] T059 [US6] Manual test: Run twice with same URLs, verify second run skips analysis
 - [X] T060 [US6] Commit US6: "feat: add style profile caching (US6)"
 
 **Acceptance Verification**:
@@ -602,11 +602,11 @@ def fetch_url(url: str, timeout: int) -> str:
 
 #### Tasks
 
-- [ ] T082 [P] [US7] Add research config fields to Configuration dataclass in src/config.py (research_enabled, research_model)
-- [ ] T083 [P] [US7] Implement StyleHints dataclass in src/models.py (content_depth, technical_level, preferred_sources, focus_areas)
-- [ ] T084 [US7] Implement ResearchResult dataclass in src/models.py (topic, facts_and_stats, quotes_and_sources, full_research_text, sources_count, timestamp)
-- [ ] T085 [US7] Update .env.example with RESEARCH_ENABLED and RESEARCH_MODEL settings
-- [ ] T086 [US7] Add AICODE-NOTE explaining why research is NOT cached (always fresh data)
+- [X] T082 [P] [US7] Add research config fields to Configuration dataclass in src/config.py (research_enabled, research_model)
+- [X] T083 [P] [US7] Implement StyleHints dataclass in src/models.py (content_depth, technical_level, preferred_sources, focus_areas)
+- [X] T084 [US7] Implement ResearchResult dataclass in src/models.py (topic, facts_and_stats, quotes_and_sources, full_research_text, sources_count, timestamp)
+- [X] T085 [US7] Update .env.example with RESEARCH_ENABLED and RESEARCH_MODEL settings
+- [X] T086 [US7] Add AICODE-NOTE explaining why research is NOT cached (always fresh data)
 
 **Acceptance**:
 ```bash
@@ -625,12 +625,12 @@ grep "RESEARCH_ENABLED" .env.example
 
 #### Tasks
 
-- [ ] T087 Grep AICODE comments in src/style_hints_extractor.py area
-- [ ] T088 [P] [US7] Write tests for StyleHintsExtractor in tests/test_style_hints_extractor.py
-- [ ] T089 [P] [US7] Implement StyleHintsExtractor class in src/style_hints_extractor.py
-- [ ] T090 [US7] Create prompts/research_style_hints.txt prompt template
-- [ ] T091 [US7] Add AICODE-NOTE on using LLM extraction vs regex for accuracy
-- [ ] T092 [US7] Verify style hints tests pass: poetry run pytest tests/test_style_hints_extractor.py -v
+- [X] T087 Grep AICODE comments in src/style_hints_extractor.py area
+- [X] T088 [P] [US7] Write tests for StyleHintsExtractor in tests/test_style_hints_extractor.py
+- [X] T089 [P] [US7] Implement StyleHintsExtractor class in src/style_hints_extractor.py
+- [X] T090 [US7] Create prompts/research_style_hints.txt prompt template
+- [X] T091 [US7] Add AICODE-NOTE on using LLM extraction vs regex for accuracy
+- [X] T092 [US7] Verify style hints tests pass: poetry run pytest tests/test_style_hints_extractor.py -v
 
 **Acceptance**:
 ```python
@@ -652,13 +652,13 @@ assert hints.technical_level in ["technical", "simple", "mixed"]
 
 #### Tasks
 
-- [ ] T093 Grep AICODE comments in src/research_client.py area
-- [ ] T094 [P] [US7] Write tests for ResearchClient with mocked API in tests/test_research_client.py
-- [ ] T095 [P] [US7] Implement ResearchClient class in src/research_client.py
-- [ ] T096 [US7] Create prompts/research.txt prompt template
-- [ ] T097 [US7] Implement research response parsing into ResearchResult
-- [ ] T098 [US7] Add AICODE-NOTE on Perplexity Sonar via OpenRouter (no separate client needed)
-- [ ] T099 [US7] Verify research client tests pass: poetry run pytest tests/test_research_client.py -v
+- [X] T093 Grep AICODE comments in src/research_client.py area
+- [X] T094 [P] [US7] Write tests for ResearchClient with mocked API in tests/test_research_client.py
+- [X] T095 [P] [US7] Implement ResearchClient class in src/research_client.py
+- [X] T096 [US7] Create prompts/research.txt prompt template
+- [X] T097 [US7] Implement research response parsing into ResearchResult
+- [X] T098 [US7] Add AICODE-NOTE on Perplexity Sonar via OpenRouter (no separate client needed)
+- [X] T099 [US7] Verify research client tests pass: poetry run pytest tests/test_research_client.py -v
 
 **Acceptance**:
 ```python
@@ -683,14 +683,14 @@ assert result.sources_count > 0
 
 #### Tasks
 
-- [ ] T100 [US7] Add research stage to main() in src/ugly_script.py (after style analysis, before generation)
-- [ ] T101 [US7] Update LLMClient.generate_article() signature to accept research_data parameter in src/llm_client.py
-- [ ] T102 [US7] Update prompts/article_generation.txt to incorporate research material
-- [ ] T103 [US7] Implement format_research_for_article() utility function in src/research_client.py
-- [ ] T104 [US7] Add Loguru progress messages for research stage
-- [ ] T105 [US7] Add graceful fallback when research_enabled=false
-- [ ] T106 [US7] Add error handling for research API failures (continue without research)
-- [ ] T107 [US7] Add AICODE-NOTE on research workflow position (after style, always fresh)
+- [X] T100 [US7] Add research stage to main() in src/ugly_script.py (after style analysis, before generation)
+- [X] T101 [US7] Update LLMClient.generate_article() signature to accept research_data parameter in src/llm_client.py
+- [X] T102 [US7] Update prompts/article_generation.txt to incorporate research material
+- [X] T103 [US7] Implement format_research_for_article() utility function in src/research_client.py
+- [X] T104 [US7] Add Loguru progress messages for research stage
+- [X] T105 [US7] Add graceful fallback when research_enabled=false
+- [X] T106 [US7] Add error handling for research API failures (continue without research)
+- [X] T107 [US7] Add AICODE-NOTE on research workflow position (after style, always fresh)
 
 **Acceptance**:
 ```bash
@@ -720,11 +720,11 @@ poetry run python src/ugly_script.py
 
 #### Tasks
 
-- [ ] T108 [P] [US7] Write integration test for complete research workflow in tests/test_research_integration.py
-- [ ] T109 [US7] Manual test: Generate article with research enabled and verify fact inclusion
-- [ ] T110 [US7] Manual test: Generate article with research disabled and verify fallback works
-- [ ] T111 [US7] Update README.md with research feature documentation
-- [ ] T112 [US7] Commit US7: "feat: add research-enhanced article generation (US7)"
+- [X] T108 [P] [US7] Write integration test for complete research workflow in tests/test_research_integration.py
+- [X] T109 [US7] Manual test: Generate article with research enabled and verify fact inclusion
+- [X] T110 [US7] Manual test: Generate article with research disabled and verify fallback works
+- [X] T111 [US7] Update README.md with research feature documentation
+- [X] T112 [US7] Commit US7: "feat: add research-enhanced article generation (US7)"
 
 **Acceptance Verification**:
 ```bash
