@@ -1,0 +1,15 @@
+Write a comprehensive article about the following topic:
+
+**Topic:** {topic}
+
+**Writing Style Requirements:**
+{style_profile}
+
+**Instructions:**
+- Write in the style described above
+- Create a well-structured article with clear sections/headings
+- Maintain the same tone, vocabulary level, and sentence structure
+- Ensure the content is informative and engaging
+- Aim for a cohesive narrative that matches the analyzed style
+
+Generate the article now:

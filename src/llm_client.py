@@ -2,6 +2,7 @@
 
 from openai import OpenAI
 from loguru import logger
+from src.prompt_manager import PromptManager
 
 # AICODE-NOTE: OpenRouter API endpoint configuration
 # We use OpenRouter with the OpenAI SDK instead of direct API calls because:
@@ -31,6 +32,7 @@ class LLMClient:
             base_url="https://openrouter.ai/api/v1",
             api_key=api_key,
         )
+        self.prompt_manager = PromptManager()
 
     def analyze_style(self, content: str) -> str:
         """Analyze writing style from content.
@@ -44,17 +46,11 @@ class LLMClient:
         Raises:
             Exception: If API call fails
         """
-        prompt = f"""Analyze the writing style of the following text. Describe the author's:
-- Tone and voice
-- Sentence structure and rhythm
-- Vocabulary choices
-- Use of rhetorical devices
-- Overall stylistic characteristics
-
-Text to analyze:
-{content}
-
-Provide a detailed style analysis that could be used to replicate this writing style."""
+        # Load and render prompt template
+        template = self.prompt_manager.get_style_analysis_prompt()
+        prompt = self.prompt_manager.render_prompt(
+            template, content=content, content_length=len(content)
+        )
 
         logger.info("Analyzing writing style...")
         response = self.client.chat.completions.create(
@@ -76,15 +72,40 @@ Provide a detailed style analysis that could be used to replicate this writing s
         Raises:
             Exception: If API call fails
         """
-        prompt = f"""Write an article about "{topic}" in the following writing style:
-
-{style_profile}
-
-Generate a well-structured article that matches this style profile."""
+        # Load and render prompt template
+        template = self.prompt_manager.get_article_generation_prompt()
+        prompt = self.prompt_manager.render_prompt(
+            template, topic=topic, style_profile=style_profile
+        )
 
         logger.info(f"Generating article about '{topic}'...")
         response = self.client.chat.completions.create(
             model=self.model, messages=[{"role": "user", "content": prompt}]
+        )
+
+        return response.choices[0].message.content
+
+    def generate(self, prompt: str, model: str | None = None) -> str:
+        """Generate text from prompt using LLM.
+
+        General-purpose method for any LLM completion task.
+
+        Args:
+            prompt: User prompt text
+            model: Optional model override (uses instance model if not provided)
+
+        Returns:
+            Generated text from LLM
+
+        Raises:
+            Exception: If API call fails
+        """
+        model_to_use = model or self.model
+        logger.debug(f"Generating with model {model_to_use}...")
+
+        response = self.client.chat.completions.create(
+            model=model_to_use,
+            messages=[{"role": "user", "content": prompt}],
         )
 
         return response.choices[0].message.content

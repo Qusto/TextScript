@@ -1,0 +1,36 @@
+Analyze this writing style profile and extract content preferences for research guidance.
+
+STYLE PROFILE:
+{profile_text}
+
+Your task is to understand what types of content and information would best fit this author's writing style.
+
+Extract the following preferences and return as JSON:
+
+1. **content_depth**: Does the author prefer descriptive/narrative content or concrete facts/data?
+   - "descriptive": Rich descriptions, metaphors, storytelling, flowing narrative
+   - "concrete": Facts, numbers, data points, brevity, direct information
+   - "balanced": Mix of both descriptive and concrete elements
+
+2. **technical_level**: What technical complexity does the author use?
+   - "technical": Technical jargon, assumes reader expertise, uses specialized terms
+   - "simple": Plain language, explains concepts simply, avoids jargon
+   - "mixed": Balances technical accuracy with accessibility
+
+3. **preferred_sources**: What types of sources would fit this style best?
+   - "academic": Research papers, studies, scholarly sources, citations
+   - "practical": Case studies, real-world examples, industry reports, anecdotes
+   - "varied": Mix of academic and practical sources
+
+4. **focus_areas**: What topics or content types does the style emphasize? (list of 2-5 strings)
+   Examples: ["data visualization", "statistics", "tutorials", "case studies", "theory", "applications"]
+   Look for: recurring themes, types of examples used, subject matter focus
+
+Return ONLY valid JSON with these exact keys (no additional text or explanation):
+
+{{
+    "content_depth": "descriptive" | "concrete" | "balanced",
+    "technical_level": "technical" | "simple" | "mixed",
+    "preferred_sources": "academic" | "practical" | "varied",
+    "focus_areas": ["area1", "area2", "area3"]
+}}

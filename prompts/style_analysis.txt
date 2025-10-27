@@ -1,0 +1,11 @@
+Analyze the writing style of the following text. Describe the author's:
+- Tone and voice (formal, casual, academic, conversational, etc.)
+- Sentence structure and rhythm (short/long sentences, complex/simple, flow)
+- Vocabulary choices (technical terms, simple language, jargon, metaphors)
+- Use of rhetorical devices (questions, repetition, analogies, etc.)
+- Overall stylistic characteristics (persuasive, informative, narrative, etc.)
+
+Text to analyze ({content_length} characters):
+{content}
+
+Provide a detailed style analysis that could be used to replicate this writing style in a new article.
