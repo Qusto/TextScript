@@ -1,7 +1,8 @@
 """Data models and entities."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Literal
+from datetime import datetime
 
 
 @dataclass
@@ -170,3 +171,54 @@ class GeneratedArticle:
         except Exception as e:
             logger.error(f"Failed to save article to {filename}: {e}")
             raise
+
+
+@dataclass
+class StyleHints:
+    """Author's content preferences extracted from style profile.
+
+    Used to guide research queries toward author's preferred content type.
+
+    Attributes:
+        content_depth: Preference for descriptive details vs concrete facts
+        technical_level: Preference for technical jargon vs simple language
+        preferred_sources: Types of sources that fit the style
+        focus_areas: What types of information the style emphasizes
+    """
+
+    content_depth: Literal["descriptive", "concrete", "balanced"] = "balanced"
+    technical_level: Literal["technical", "simple", "mixed"] = "mixed"
+    preferred_sources: Literal["academic", "practical", "varied"] = "varied"
+    focus_areas: list[str] = field(default_factory=lambda: ["data", "examples"])
+
+
+# AICODE-NOTE: Research is NOT cached (unlike style profiles)
+# We deliberately don't cache research results because:
+# 1. Research data becomes outdated - facts, statistics, and news change
+# 2. User explicitly chose "always do fresh research" for current information
+# 3. Research API (Perplexity Sonar) provides real-time web search results
+# 4. Style profiles are static (author's writing pattern), but research is dynamic
+# 5. Caching by topic would be complex (same topic, different angles/depth)
+# Trade-off: Extra API cost for freshness, but ensures articles have current data
+# Future: Could add optional research cache with TTL if cost becomes issue
+
+
+@dataclass
+class ResearchResult:
+    """Result from research API containing enrichment data for article.
+
+    Attributes:
+        topic: Original research topic
+        facts_and_stats: Key facts with data points
+        quotes_and_sources: Expert quotes with attribution
+        full_research_text: Comprehensive research synthesis
+        sources_count: Number of sources consulted
+        timestamp: When research was performed
+    """
+
+    topic: str
+    facts_and_stats: list[str] = field(default_factory=list)
+    quotes_and_sources: list[dict[str, str]] = field(default_factory=list)
+    full_research_text: str = ""
+    sources_count: int = 0
+    timestamp: datetime = field(default_factory=datetime.now)

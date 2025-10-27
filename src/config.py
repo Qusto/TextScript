@@ -16,6 +16,8 @@ class Configuration:
         max_content_per_url: Maximum characters to extract per URL
         max_total_content: Maximum total characters for style analysis
         url_fetch_timeout: HTTP request timeout in seconds
+        research_enabled: Enable research stage before article generation
+        research_model: Model to use for research (default: perplexity/sonar-pro)
     """
 
     api_key: str
@@ -24,6 +26,8 @@ class Configuration:
     max_content_per_url: int = 5000
     max_total_content: int = 8000
     url_fetch_timeout: int = 30
+    research_enabled: bool = False
+    research_model: str = "perplexity/sonar-pro"
 
     def __post_init__(self):
         """Validate configuration values."""
@@ -66,6 +70,13 @@ def load_config(env_file: str = ".env") -> Configuration:
         except ValueError:
             return default
 
+    # Helper to safely convert env vars to bool
+    def get_bool(key: str, default: bool) -> bool:
+        value = os.getenv(key)
+        if value is None:
+            return default
+        return value.lower() in ("true", "1", "yes", "on")
+
     return Configuration(
         api_key=os.getenv("OPENAI_API_KEY", ""),
         model=os.getenv("MODEL", "openai/gpt-4o-mini"),
@@ -73,4 +84,6 @@ def load_config(env_file: str = ".env") -> Configuration:
         max_content_per_url=get_int("MAX_CONTENT_LENGTH_PER_URL", 5000),
         max_total_content=get_int("MAX_TOTAL_CONTENT_LENGTH", 8000),
         url_fetch_timeout=get_int("URL_FETCH_TIMEOUT", 30),
+        research_enabled=get_bool("RESEARCH_ENABLED", False),
+        research_model=os.getenv("RESEARCH_MODEL", "perplexity/sonar-pro"),
     )
