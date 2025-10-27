@@ -9,6 +9,9 @@ from src.url_fetcher import fetch_url, extract_text_from_html
 from src.models import URLSource, ContentCollection, StyleProfile, GeneratedArticle
 from src.llm_client import LLMClient
 from src.style_cache import StyleCache, generate_url_hash
+from src.style_hints_extractor import StyleHintsExtractor
+from src.research_client import ResearchClient
+from src.prompt_manager import PromptManager
 
 
 def configure_logging():
@@ -183,10 +186,70 @@ def main():
             cached=is_cached,
         )
 
-        # Generate article
+        # Optional research stage (US7)
+        research_result = None
+        if config.research_enabled:
+            logger.info("")
+            logger.info("=== Research Enhancement Stage ===")
+
+            # Extract style hints from profile
+            logger.info("Extracting style hints from profile...")
+            hints_extractor = StyleHintsExtractor(config)
+            style_hints = hints_extractor.extract(style_profile)
+            logger.success(
+                f"✓ Style hints extracted: {style_hints.content_depth}, "
+                f"{style_hints.technical_level}, {style_hints.preferred_sources}"
+            )
+
+            # Perform research
+            research_client = ResearchClient(config)
+            research_result = research_client.research(topic, style_hints)
+            logger.success(
+                f"✓ Research complete: {len(research_result.facts_and_stats)} facts, "
+                f"{len(research_result.quotes_and_sources)} quotes"
+            )
+        else:
+            logger.info("")
+            logger.info("Research stage disabled (RESEARCH_ENABLED=false)")
+
+        # Generate article (with research if available)
         logger.info("")
         logger.info(f"Generating article about '{topic}'...")
-        article_content = client.generate_article(topic, style_profile.profile_text)
+
+        if research_result:
+            # Use enhanced generation with research data
+            prompt_manager = PromptManager()
+            template = prompt_manager.get_article_generation_prompt()
+
+            # Build research context for prompt
+            research_context = f"""
+
+RESEARCH DATA (use this to enrich the article):
+
+Facts and Statistics:
+{chr(10).join(f'- {fact}' for fact in research_result.facts_and_stats)}
+
+Quotes and Sources:
+{chr(10).join(f'- {quote["text"]}' for quote in research_result.quotes_and_sources)}
+
+Full Research:
+{research_result.full_research_text}
+
+Please integrate these facts, quotes, and findings naturally into the article.
+"""
+
+            # Render prompt with research context
+            enhanced_prompt = prompt_manager.render_prompt(
+                template,
+                topic=topic,
+                style_profile=style_profile.profile_text + research_context,
+            )
+
+            article_content = client.generate(enhanced_prompt)
+        else:
+            # Standard generation without research
+            article_content = client.generate_article(topic, style_profile.profile_text)
+
         logger.success("✓ Article generation complete")
 
         # Create article object
