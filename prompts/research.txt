@@ -1,0 +1,45 @@
+Research the following topic and provide comprehensive, current information to enrich an article.
+
+**TOPIC**: {topic}
+
+**STYLE GUIDANCE**:
+The target author prefers:
+- **Content depth**: {content_depth} (descriptive=rich details/narrative, concrete=facts/data, balanced=mix)
+- **Technical level**: {technical_level} (technical=jargon/expertise, simple=plain language, mixed=accessible accuracy)
+- **Source types**: {preferred_sources} (academic=research papers/studies, practical=case studies/examples, varied=mix)
+- **Focus areas**: {focus_areas}
+
+Your research should match these preferences. If content_depth is "descriptive", provide rich context and examples. If "concrete", focus on hard data and statistics.
+
+---
+
+Please structure your research in the following format:
+
+## Key Facts and Statistics
+Provide 3-5 bullet points with specific, current data:
+- [Fact with numbers, percentages, dates - be specific and cite timeframe]
+- [Another concrete fact or statistic]
+- [Key finding with measurable data]
+
+## Expert Quotes and Sources
+Provide 2-4 bullet points with quotes or findings from credible sources:
+- [Quote from expert/organization with attribution - "Quote text" - Source Name, Affiliation]
+- [Research finding from study - Study name/institution showing X result]
+- [Industry report or analysis with source]
+
+## Full Research Synthesis
+Write 2-4 comprehensive paragraphs that:
+1. Synthesize the facts and sources into a cohesive narrative
+2. Provide current, up-to-date information (prioritize recent sources from 2023-2025)
+3. Match the technical_level (use appropriate jargon or simplify as needed)
+4. Align with preferred_sources type (cite academic studies or practical examples accordingly)
+5. Cover focus_areas: {focus_areas}
+6. Adjust depth based on content_depth preference
+
+---
+
+**IMPORTANT**:
+- Use real, current information from the web (you have access to real-time search)
+- Prioritize accuracy and proper attribution
+- Match the style guidance preferences throughout
+- Ensure facts are verifiable and sources are credible
