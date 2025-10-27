@@ -8,8 +8,9 @@ TextScript analyzes the writing style from web articles and uses AI to generate 
 
 1. **Fetches & Analyzes**: Reads articles from URLs you provide
 2. **Learns Style**: Uses LLM to understand the author's unique writing patterns
-3. **Generates Content**: Creates new articles on your topic in that exact style
-4. **Caches Profiles**: Saves style profiles to save time and API costs
+3. **Researches Topics** *(optional)*: Gathers current facts, stats, and quotes via Perplexity Sonar
+4. **Generates Content**: Creates new articles on your topic in that exact style
+5. **Caches Profiles**: Saves style profiles to save time and API costs
 
 ## Quick Start
 
@@ -54,6 +55,7 @@ The generated article will be:
 ### Core Functionality
 - **🎨 Style Analysis**: Extracts and analyzes writing style from any web articles
 - **✍️ Article Generation**: Creates original content matching the analyzed style
+- **🔬 Research Enhancement** *(NEW)*: Optional research stage using Perplexity Sonar for current facts & data
 - **⚡ Smart Caching**: Saves style profiles to avoid redundant API calls (saves tokens!)
 - **📝 Custom Prompts**: Full control over prompt templates in `prompts/` folder
 - **⚙️ Configurable Limits**: Fine-tune content length, URL count, and timeouts
@@ -72,7 +74,12 @@ The generated article will be:
 ```
 Input Files → URL Fetching → Text Extraction → Style Analysis → Caching
                                                       ↓
-Output Files ← Article Generation ← Custom Prompts ← Cached Profile
+                                               Style Profile
+                                                      ↓
+                                         [Optional: Research Enhancement]
+                                          Style Hints → Perplexity Research
+                                                      ↓
+Output Files ← Article Generation ← Custom Prompts + Research Data
 ```
 
 ### Key Design Decisions
@@ -134,40 +141,114 @@ https://www.paulgraham.com/avg.html
 # Saves to output.txt
 ```
 
+## 🔬 Research Enhancement (US7)
+
+**NEW**: Enrich your articles with real-time facts, statistics, and expert quotes!
+
+### How It Works
+
+When `RESEARCH_ENABLED=true`, TextScript adds an optional research stage that:
+
+1. **Extracts Style Hints**: Analyzes your style profile to understand content preferences
+   - Content depth: descriptive vs concrete
+   - Technical level: simple vs technical
+   - Preferred sources: academic vs practical
+   - Focus areas: key topics to emphasize
+
+2. **Performs Research**: Uses Perplexity Sonar to gather current information
+   - Facts and statistics with numbers/data
+   - Expert quotes and sources with attribution
+   - Full research synthesis tailored to style
+
+3. **Enriches Articles**: Integrates research seamlessly into generated content
+   - Facts woven naturally into narrative
+   - Quotes attributed properly
+   - Current, up-to-date information (2023-2025)
+
+### Enable Research
+
+Edit `.env`:
+```bash
+RESEARCH_ENABLED=true
+RESEARCH_MODEL=perplexity/sonar-pro  # or perplexity/sonar for faster/cheaper
+```
+
+### Example
+
+**Topic**: "The Impact of AI on Software Development"
+
+**Without Research** (old behavior):
+- Article based purely on style analysis
+- No specific facts or data points
+- Generic content
+
+**With Research** (new feature):
+- ✅ "AI coding assistants increased developer productivity by 55% (GitHub, 2024)"
+- ✅ "According to Stanford researchers, AI reduces debugging time by 40%"
+- ✅ Current industry statistics and expert quotes
+- ✅ Specific examples and case studies
+
+### Why Perplexity Sonar?
+
+- **Real-time search**: Access to current web information
+- **Specialized**: Optimized for research and fact-finding
+- **Cost-effective**: Cheaper than GPT-4 for research tasks
+- **Attribution**: Returns sources for credibility
+
+### Important Notes
+
+- Research results are **NOT cached** (always fresh data)
+- Style profiles are **still cached** (saves API costs)
+- Research adds ~3-5 seconds to generation time
+- Requires separate API costs (Sonar queries via OpenRouter)
+
 ## Configuration
 
 See `.env.example` for all available options:
+
+### Content Limits
 - `MAX_URLS`: Maximum number of URLs to process (default: 10)
 - `MAX_CONTENT_LENGTH_PER_URL`: Max characters per URL (default: 5000)
 - `MAX_TOTAL_CONTENT_LENGTH`: Max total content length (default: 8000)
 - `URL_FETCH_TIMEOUT`: Timeout for URL fetching in seconds (default: 30)
+
+### Research Settings (NEW)
+- `RESEARCH_ENABLED`: Enable research enhancement stage (default: false)
+- `RESEARCH_MODEL`: Model for research (default: perplexity/sonar-pro)
+  - Options: `perplexity/sonar-pro` (best), `perplexity/sonar` (faster/cheaper), `openai/gpt-4o-mini` (fallback)
 
 ## Project Structure
 
 ```
 text-script/
 ├── src/
-│   ├── ugly_script.py      # Main entry point
-│   ├── config.py           # Configuration management
-│   ├── url_fetcher.py      # URL fetching and content extraction
-│   ├── prompt_manager.py   # Prompt template management
-│   ├── style_cache.py      # Style profile caching
-│   ├── llm_client.py       # OpenRouter API client
-│   └── models.py           # Data models
-├── tests/                  # Test suite
-├── prompts/                # Customizable prompt templates
-├── links.txt               # Input: URLs to analyze
-└── topic.txt               # Input: Article topic
+│   ├── ugly_script.py             # Main entry point
+│   ├── config.py                  # Configuration management
+│   ├── url_fetcher.py             # URL fetching and content extraction
+│   ├── prompt_manager.py          # Prompt template management
+│   ├── style_cache.py             # Style profile caching
+│   ├── llm_client.py              # OpenRouter API client
+│   ├── style_hints_extractor.py   # Extract style hints (NEW)
+│   ├── research_client.py         # Perplexity research (NEW)
+│   └── models.py                  # Data models
+├── tests/                         # Test suite (121 tests)
+├── prompts/                       # Customizable prompt templates
+│   ├── style_analysis.txt
+│   ├── article_generation.txt
+│   ├── research_style_hints.txt   # NEW
+│   └── research.txt               # NEW
+├── links.txt                      # Input: URLs to analyze
+└── topic.txt                      # Input: Article topic
 ```
 
 ## 🧪 Testing
 
-Comprehensive test suite with 96 tests covering all functionality:
+Comprehensive test suite with 121 tests covering all functionality:
 
 ```bash
 # Run all tests
 poetry run pytest
-# ====== 96 passed in 0.75s ======
+# ====== 121 passed in 1.19s ======
 
 # Run with coverage
 poetry run pytest --cov=src --cov-report=term-missing
@@ -182,11 +263,13 @@ poetry run pytest tests/test_style_cache.py -v
 |--------|----------|-------|--------|
 | `config.py` | 100% | 18 | ✅ |
 | `llm_client.py` | 100% | 6 | ✅ |
+| `style_hints_extractor.py` | 100% | 11 | ✅ (NEW) |
+| `research_client.py` | 100% | 14 | ✅ (NEW) |
 | `url_fetcher.py` | 90% | 33 | ✅ |
 | `prompt_manager.py` | 90% | 16 | ✅ |
 | `models.py` | 88% | 11 | ✅ |
 | `style_cache.py` | 86% | 15 | ✅ |
-| **Overall** | **61%** | **96** | **✅** |
+| **Overall** | **~70%** | **121** | **✅** |
 
 ### Test Categories
 
@@ -197,12 +280,13 @@ poetry run pytest tests/test_style_cache.py -v
 
 ## 📈 Development Stats
 
-- **Total Tasks**: 80/81 completed (99%)
-- **User Stories**: 6/6 delivered (100%)
-- **Development Time**: ~4 hours
-- **Commits**: 13 feature commits
-- **Lines of Code**: ~1,200 (src + tests)
+- **Total Tasks**: 112/112 completed (100%) ✅
+- **User Stories**: 7/7 delivered (100%) ✅
+- **Development Time**: ~6 hours
+- **Commits**: 17 feature commits
+- **Lines of Code**: ~2,400 (src + tests)
 - **Test-Driven Development**: All features have tests
+- **Test Coverage**: ~70% with 121 comprehensive tests
 
 ### Delivered User Stories
 
@@ -212,6 +296,7 @@ poetry run pytest tests/test_style_cache.py -v
 4. ✅ **US4**: Customize LLM prompts
 5. ✅ **US5**: Configure content limits
 6. ✅ **US6**: Reuse cached style profiles
+7. ✅ **US7**: Research-enhanced article generation *(NEW)*
 
 ## 🛠️ Troubleshooting
 
