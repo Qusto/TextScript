@@ -1,0 +1,233 @@
+openapi: 3.1.0
+info:
+  title: TextScript Article Generation API
+  description: |
+    Streaming API for generating styled articles using Server-Sent Events (SSE).
+    Wraps the existing Python article generation script with real-time log streaming.
+  version: 1.0.0
+  contact:
+    name: TextScript Team
+
+servers:
+  - url: http://localhost:8000
+    description: Local development server
+  - url: http://production-server:8000
+    description: Production server
+
+paths:
+  /api/generate:
+    get:
+      summary: Generate article with streaming logs
+      description: |
+        Starts an article generation process and streams progress via Server-Sent Events (SSE).
+
+        **SSE Event Types:**
+        - `message` (default): Log messages from generation process
+        - `result`: Final article content (sent once on success)
+        - `error`: Error details (sent once on failure)
+        - `close`: Stream completion signal
+
+        **Client Disconnect Handling:**
+        If the client disconnects (e.g., browser tab closed), the backend automatically terminates
+        the generation process to prevent resource waste (FR-016.2).
+
+      operationId: generateArticle
+
+      parameters:
+        - name: topic
+          in: query
+          required: true
+          description: Article topic to generate
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 1000
+            example: "Основы машинного обучения"
+
+        - name: source_urls
+          in: query
+          required: true
+          description: Comma-separated list of style reference URLs
+          schema:
+            type: string
+            example: "https://example.com/article1,https://example.com/article2"
+          # Note: In production, consider POST with JSON body to avoid URL length limits
+
+        - name: research
+          in: query
+          required: false
+          description: Enable research mode for deeper analysis
+          schema:
+            type: boolean
+            default: false
+            example: true
+
+      responses:
+        '200':
+          description: SSE stream started successfully
+          headers:
+            Content-Type:
+              schema:
+                type: string
+                example: "text/event-stream"
+            Cache-Control:
+              schema:
+                type: string
+                example: "no-cache"
+            Connection:
+              schema:
+                type: string
+                example: "keep-alive"
+
+          content:
+            text/event-stream:
+              schema:
+                type: string
+                description: |
+                  Server-Sent Events stream with multiple event types.
+
+                  Format:
+                  ```
+                  event: <event_type>
+                  data: <payload>
+
+                  ```
+
+              examples:
+                logMessage:
+                  summary: Log message event
+                  value: |
+                    data: [INFO] Starting article generation...
+
+                    data: [INFO] Successfully fetched: https://example.com/article1
+
+                    data: [WARN] Не удалось получить URL: https://unreachable.com (Ошибка: Таймаут)
+
+
+                resultEvent:
+                  summary: Article result event
+                  value: |
+                    event: result
+                    data: # Основы машинного обучения\n\nМашинное обучение...
+
+
+                errorEvent:
+                  summary: Error event
+                  value: |
+                    event: error
+                    data: {"error_type": "process", "message": "Script crashed with exit code 1"}
+
+
+                closeEvent:
+                  summary: Stream close event
+                  value: |
+                    event: close
+                    data: done
+
+
+        '400':
+          description: Validation error (missing or invalid parameters)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                missingTopic:
+                  summary: Missing required parameter
+                  value:
+                    error_type: "validation"
+                    message: "Missing required parameter: topic"
+
+                invalidUrl:
+                  summary: Invalid URL format
+                  value:
+                    error_type: "validation"
+                    message: "Invalid URL format in source_urls"
+                    details: "https://not a valid url"
+
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                serverError:
+                  summary: Unexpected server error
+                  value:
+                    error_type: "unknown"
+                    message: "Internal server error"
+                    details: "Exception details for debugging"
+
+  /health:
+    get:
+      summary: Health check endpoint
+      description: Returns server health status
+      operationId: healthCheck
+
+      responses:
+        '200':
+          description: Server is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "healthy"
+                  active_processes:
+                    type: integer
+                    description: Number of currently running generation processes
+                    example: 3
+                  uptime_seconds:
+                    type: number
+                    description: Server uptime in seconds
+                    example: 86400
+
+components:
+  schemas:
+    ErrorResponse:
+      type: object
+      required:
+        - error_type
+        - message
+      properties:
+        error_type:
+          type: string
+          enum: [validation, process, timeout, unknown]
+          description: Error category
+        message:
+          type: string
+          description: User-friendly error message
+        details:
+          type: string
+          description: Technical details for debugging (optional)
+      example:
+        error_type: "validation"
+        message: "Missing required parameter: topic"
+
+    LogMessage:
+      type: string
+      description: |
+        Plain text log message with severity prefix.
+        Format: `[LEVEL] message text`
+      pattern: '^\[(INFO|WARN|ERROR)\] .+$'
+      example: "[INFO] Successfully fetched: https://example.com"
+
+    ArticleResult:
+      type: string
+      description: |
+        Generated article content in text/markdown format.
+        Maximum length: 50,000 characters (SC-008).
+      maxLength: 50000
+      example: |
+        # Основы машинного обучения
+
+        Машинное обучение (ML) — это раздел искусственного интеллекта...
+
+tags:
+  - name: generation
+    description: Article generation operations
+  - name: monitoring
+    description: Health and monitoring endpoints
