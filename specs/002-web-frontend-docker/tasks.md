@@ -78,32 +78,32 @@ This is a web app with:
 
 ### Frontend Implementation for US1
 
-- [ ] T021 [P] [US1] Create web-frontend/src/components/input-form.tsx with Card, Input, Textarea, Checkbox, Button components (FR-002)
-- [ ] T022 [US1] Implement topic and sourceUrls state management in web-frontend/src/components/input-form.tsx with useState
-- [ ] T023 [US1] Implement button disabled logic in web-frontend/src/components/input-form.tsx: disabled when topic OR sourceUrls empty (FR-003, FR-003.1, FR-003.2)
-- [ ] T024 [US1] Implement onSubmit handler in web-frontend/src/components/input-form.tsx that passes data to parent callback (FR-004)
-- [ ] T025 [US1] Add disabled state for all input fields (topic, sourceUrls, research checkbox) in web-frontend/src/components/input-form.tsx when isLoading=true (FR-004.1)
-- [ ] T026 [P] [US1] Create web-frontend/src/components/execution-view.tsx with Tabs component (log tab and result tab) (FR-005)
-- [ ] T027 [US1] Implement log display in web-frontend/src/components/execution-view.tsx with pre-formatted scrollable block and auto-scroll to bottom (FR-007)
-- [ ] T028 [US1] Implement result tab in web-frontend/src/components/execution-view.tsx with disabled state until finalArticle is set (FR-008, FR-009)
-- [ ] T029 [US1] Add Copy and Download buttons in result tab of web-frontend/src/components/execution-view.tsx (FR-010)
+- [X] T021 [P] [US1] Create web-frontend/src/components/input-form.tsx with Card, Input, Textarea, Checkbox, Button components (FR-002)
+- [X] T022 [US1] Implement topic and sourceUrls state management in web-frontend/src/components/input-form.tsx with useState
+- [X] T023 [US1] Implement button disabled logic in web-frontend/src/components/input-form.tsx: disabled when topic OR sourceUrls empty (FR-003, FR-003.1, FR-003.2)
+- [X] T024 [US1] Implement onSubmit handler in web-frontend/src/components/input-form.tsx that passes data to parent callback (FR-004)
+- [X] T025 [US1] Add disabled state for all input fields (topic, sourceUrls, research checkbox) in web-frontend/src/components/input-form.tsx when isLoading=true (FR-004.1)
+- [X] T026 [P] [US1] Create web-frontend/src/components/execution-view.tsx with Tabs component (log tab and result tab) (FR-005)
+- [X] T027 [US1] Implement log display in web-frontend/src/components/execution-view.tsx with pre-formatted scrollable block and auto-scroll to bottom (FR-007)
+- [X] T028 [US1] Implement result tab in web-frontend/src/components/execution-view.tsx with disabled state until finalArticle is set (FR-008, FR-009)
+- [X] T029 [US1] Add Copy and Download buttons in result tab of web-frontend/src/components/execution-view.tsx (FR-010)
 
 ### Backend Implementation for US1
 
-- [ ] T030 [US1] Implement result event emission in backend/src/api/generate.py: read output.txt and send event: result (FR-019)
-- [ ] T031 [US1] Implement close event emission in backend/src/api/generate.py after successful completion (FR-021)
-- [ ] T032 [US1] Add input validation in backend/src/api/generate.py for topic (min 1 char, max 1000) and source_urls (valid URLs, 1-10 count)
+- [X] T030 [US1] Implement result event emission in backend/src/api/generate.py: read output.txt and send event: result (FR-019)
+- [X] T031 [US1] Implement close event emission in backend/src/api/generate.py after successful completion (FR-021)
+- [X] T032 [US1] Add input validation in backend/src/api/generate.py for topic (min 1 char, max 1000) and source_urls (valid URLs, 1-10 count)
 
 ### Frontend Integration for US1
 
-- [ ] T033 [US1] Create web-frontend/src/app/page.tsx with state: isLoading, logLines[], finalArticle, error (DM-5)
-- [ ] T034 [US1] Implement handleSubmit in web-frontend/src/app/page.tsx: create EventSource with /api/generate?topic=...&source_urls=...&research=... (FR-006)
-- [ ] T035 [US1] Implement EventSource message handler in web-frontend/src/app/page.tsx: append to logLines array
-- [ ] T036 [US1] Implement EventSource result handler in web-frontend/src/app/page.tsx: set finalArticle and isLoading=false
-- [ ] T037 [US1] Implement EventSource close handler in web-frontend/src/app/page.tsx: close EventSource connection
-- [ ] T038 [US1] Implement clipboard copy functionality in web-frontend/src/components/execution-view.tsx using navigator.clipboard.writeText() (FR-011)
-- [ ] T039 [US1] Implement download functionality in web-frontend/src/components/execution-view.tsx: create Blob and download as .txt file (FR-012)
-- [ ] T040 [US1] Add layout and styling in web-frontend/src/app/page.tsx: single-column max-w-3xl container with dark zinc theme (FR-001, FR-015)
+- [X] T033 [US1] Create web-frontend/src/app/page.tsx with state: isLoading, logLines[], finalArticle, error (DM-5)
+- [X] T034 [US1] Implement handleSubmit in web-frontend/src/app/page.tsx: create EventSource with /api/generate?topic=...&source_urls=...&research=... (FR-006)
+- [X] T035 [US1] Implement EventSource message handler in web-frontend/src/app/page.tsx: append to logLines array
+- [X] T036 [US1] Implement EventSource result handler in web-frontend/src/app/page.tsx: set finalArticle and isLoading=false
+- [X] T037 [US1] Implement EventSource close handler in web-frontend/src/app/page.tsx: close EventSource connection
+- [X] T038 [US1] Implement clipboard copy functionality in web-frontend/src/components/execution-view.tsx using navigator.clipboard.writeText() (FR-011)
+- [X] T039 [US1] Implement download functionality in web-frontend/src/components/execution-view.tsx: create Blob and download as .txt file (FR-012)
+- [X] T040 [US1] Add layout and styling in web-frontend/src/app/page.tsx: single-column max-w-3xl container with dark zinc theme (FR-001, FR-015)
 
 **Checkpoint**: MVP complete - user can generate articles end-to-end
 
