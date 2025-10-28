@@ -99,6 +99,64 @@ A user can switch between dark and light themes based on their preference, with 
 
 ---
 
+### User Story 6 - Russian Localization (Priority: P0) 🎯 Critical
+
+A user opens the interface and sees all text elements (labels, buttons, messages, errors) displayed in Russian language for better accessibility to Russian-speaking audience.
+
+**Why this priority**: This is critical for target audience accessibility. The interface must be in Russian to be usable by the intended users. Without localization, users face language barriers.
+
+**Independent Test**: Can be tested by opening the interface and verifying that all UI elements (form labels, buttons, tab names, error messages, placeholders) are in Russian.
+
+**Acceptance Scenarios**:
+
+1. **Given** user opens the interface, **When** the page loads, **Then** all form labels are displayed in Russian ("Название статьи", "Ключевые тезисы", "URL для анализа стиля", "Включить исследование")
+2. **Given** user interacts with the form, **When** they hover over buttons or see tooltips, **Then** all button text and tooltips are in Russian ("Сгенерировать", "Копировать", "Скачать .txt")
+3. **Given** generation is running, **When** log messages appear, **Then** system messages are in Russian (e.g., "Генерация началась...", "Загружаю URL...", "Создаю статью...")
+4. **Given** an error occurs, **When** error alert displays, **Then** the error message is in Russian (e.g., "Произошла ошибка потока", "Не удалось подключиться к серверу")
+5. **Given** user completes generation, **When** they view the result tab, **Then** tab labels and success messages are in Russian
+
+---
+
+### User Story 7 - Style Profile Management (Priority: P0) 🎯 Critical
+
+A user can create, view, and manage a style profile extracted from reference URLs. The profile is stored persistently and reused for article generation without re-analyzing URLs each time.
+
+**Why this priority**: This is critical for user workflow efficiency and system architecture. Without profile management, users must provide URLs for every generation, and the system wastes resources re-analyzing the same style repeatedly. Profile persistence enables "set once, use many times" pattern.
+
+**Independent Test**: Can be tested by providing URLs for style extraction, generating a profile, verifying it's saved, then generating articles without re-entering URLs.
+
+**Acceptance Scenarios**:
+
+1. **Given** user opens the interface for the first time, **When** no style profile exists, **Then** the "Стиль" section shows status "Профиль не загружен" with a collapsible URL input field visible
+2. **Given** no profile exists, **When** user enters URLs in the style profile section and clicks "Создать профиль", **Then** the system extracts style characteristics from URLs, saves profile to database, and displays status "Профиль загружен"
+3. **Given** a profile is loaded, **When** user views the "Стиль" section, **Then** the URL input field is hidden, status shows "Профиль загружен" with green indicator, and a "Посмотреть профиль" button is visible
+4. **Given** a profile is loaded, **When** user clicks "Посмотреть профиль", **Then** a modal dialog opens displaying the extracted style characteristics (profile_text from database)
+5. **Given** user views the profile, **When** they close the modal, **Then** the profile viewer dialog closes and the form remains in loaded state
+6. **Given** a profile is loaded, **When** user clicks "Обновить профиль", **Then** the URL input field becomes visible, allowing user to enter new URLs and create a new profile (replacing the old one)
+7. **Given** a profile is loaded, **When** user attempts to generate an article, **Then** the system uses the stored profile_text for generation without requiring URL input
+8. **Given** no profile is loaded, **When** user tries to click "Сгенерировать", **Then** the button is disabled and a warning message "Сначала создайте профиль стиля" appears
+
+---
+
+### User Story 8 - Article Title and Key Points (Priority: P1)
+
+A user can specify an article title (required) and optional key points/theses that should be covered in the generated article for better content control.
+
+**Why this priority**: This enhances content control and article relevance. Title field replaces the vague "topic" field with clear article naming. Key points allow users to guide content direction, ensuring the article covers specific theses they care about.
+
+**Independent Test**: Can be tested by entering a title and optional key points, generating an article, and verifying the article reflects the title and covers the specified points.
+
+**Acceptance Scenarios**:
+
+1. **Given** user opens the form, **When** they view the "Контент" accordion section, **Then** they see "Название статьи" input field (required) and "Ключевые тезисы" textarea (optional)
+2. **Given** user enters only article title, **When** profile is loaded and they click "Сгенерировать", **Then** generation starts with title, using profile but no key points
+3. **Given** user enters article title and key points, **When** they click "Сгенерировать", **Then** generation starts with both title and key points, and the article covers the specified theses
+4. **Given** user enters key points without title, **When** they attempt to generate, **Then** the "Сгенерировать" button remains disabled (title is required)
+5. **Given** user enters multi-line key points (e.g., "Тезис 1\nТезис 2\nТезис 3"), **When** generation starts, **Then** the backend receives all key points and includes them in the article generation prompt
+6. **Given** user generates an article with key points, **When** the article is complete, **Then** the article content reflects and addresses each specified key point
+
+---
+
 ### Edge Cases
 
 - **Empty/Long Input**: System prevents submission when topic or URLs are empty (button stays disabled). For extremely long inputs (>10,000 characters), system should either truncate or display validation error.
@@ -146,13 +204,32 @@ A user can switch between dark and light themes based on their preference, with 
 - **FR-023**: System MUST be deployable to a production server
 - **FR-024**: Frontend MUST use shadcn/ui components (button, card, input, textarea, label, checkbox, alert, tabs)
 - **FR-025**: Frontend MUST implement responsive design working on desktop and tablet viewports
+- **FR-026**: System MUST display all UI text elements in Russian language (labels, buttons, messages, errors, placeholders)
+- **FR-027**: System MUST provide i18n translation dictionary for all interface strings
+- **FR-028**: System MUST persist style profiles in SQLite database with schema: id, urls_hash, profile_text, source_urls, created_at, updated_at
+- **FR-029**: Backend MUST provide API endpoints for style profile management: GET /api/profiles/current, POST /api/profiles, GET /api/profiles/{id}, DELETE /api/profiles/{id}
+- **FR-030**: System MUST extract style characteristics from provided URLs and save as profile_text in database
+- **FR-031**: System MUST display style profile status indicator (loaded/not loaded) in the form
+- **FR-032**: System MUST allow users to view stored profile_text in a modal dialog
+- **FR-033**: System MUST allow users to update style profile by providing new URLs (replaces existing profile)
+- **FR-034**: System MUST disable article generation button when no style profile is loaded (with warning message)
+- **FR-035**: System MUST require article title field (cannot be empty) for article generation
+- **FR-036**: System MUST accept optional key points/theses field (multiline textarea) for article generation
+- **FR-037**: Backend MUST integrate key points into article generation prompt when provided
+- **FR-038**: Frontend MUST organize form inputs using accordion pattern with three sections: "Контент" (title, keyPoints), "Стиль" (profile management), "Настройки" (research checkbox)
+- **FR-039**: System MUST optimize interface compactness for 1280x720 viewport (reduce padding, adjust spacing)
+- **FR-040**: System MUST implement two-stage research mode: Stage 1 - information collection via research API, Stage 2 - article generation with collected data
+- **FR-041**: Backend MUST change API contract from GET /api/generate?topic=...&source_urls=... to POST /api/generate with JSON body {title, keyPoints, profileId, enableResearch}
+- **FR-042**: Backend SSE streaming MUST send JSON format messages: `data: {"type":"log|result|error","message":"..."}\n\n` instead of plain text format
 
 ### Key Entities
 
-- **Generation Request**: Represents a single article generation job with topic (string), source URLs (list of strings), and research flag (boolean)
-- **Log Message**: Represents a single line of output from the generation process with timestamp and message text
-- **Generated Article**: Represents the final output with article text content and generation metadata (completion time, research enabled)
-- **User Session**: Represents a browser session with theme preference and active generation state
+- **Generation Request**: Represents a single article generation job with title (string, required), key points (string, optional), profile ID (integer, required), and research flag (boolean)
+- **Style Profile**: Represents extracted writing style characteristics with id, urls_hash (MD5), profile_text (LLM analysis), source_urls (JSON array), created_at, updated_at timestamps
+- **Log Message**: Represents a single line of output from the generation process with type ("log" | "result" | "error") and message text
+- **Generated Article**: Represents the final output with article text content and generation metadata (completion time, research enabled, title, key points used)
+- **User Session**: Represents a browser session with theme preference, active generation state, and loaded style profile ID
+- **Research Result**: Represents collected information from research API with facts, statistics, quotes, sources used for article enrichment (two-stage generation)
 
 ## Success Criteria *(mandatory)*
 
@@ -171,3 +248,10 @@ A user can switch between dark and light themes based on their preference, with 
 - **SC-011**: When one or more source URLs are unreachable, the system completes generation successfully with remaining URLs and displays clear warning messages for failed URLs
 - **SC-012**: When a user closes the browser tab during generation, the backend process terminates within 5 seconds, freeing all resources
 - **SC-013**: Users cannot trigger concurrent generation requests - the interface prevents multiple submissions through form field disabling
+- **SC-014**: All UI text elements (labels, buttons, messages, errors) are displayed in Russian without English fallbacks
+- **SC-015**: Style profile creation completes within 30 seconds for 1-3 reference URLs
+- **SC-016**: Users can view their stored style profile characteristics in under 1 second (database query + modal render)
+- **SC-017**: The "Сгенерировать" button is disabled with clear warning message when no style profile is loaded
+- **SC-018**: Interface fits comfortably in 1280x720 viewport without vertical scroll on form (before generation starts)
+- **SC-019**: Key points (if provided) are successfully incorporated into generated article content
+- **SC-020**: Two-stage research mode completes information collection before starting article generation, with clear log separation between stages

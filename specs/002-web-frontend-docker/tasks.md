@@ -117,8 +117,8 @@ This is a web app with:
 
 **Agent**: `python-backend-developer` (T041), `frontend-developer` (T042)
 
-- [ ] T041 [US2] Add research query parameter handling in backend/src/api/generate.py and pass --research flag to subprocess (FR-016)
-- [ ] T042 [US2] Add research checkbox state in web-frontend/src/components/input-form.tsx and include in EventSource URL query params
+- [X] T041 [US2] Add research query parameter handling in backend/src/api/generate.py and pass --research flag to subprocess (FR-016)
+- [X] T042 [US2] Add research checkbox state in web-frontend/src/components/input-form.tsx and include in EventSource URL query params
 
 **Checkpoint**: Research mode functional - generates enhanced articles
 
@@ -132,9 +132,9 @@ This is a web app with:
 
 **Agent**: `frontend-developer` (T043-T045)
 
-- [ ] T043 [US3] Implement useRef for logEndRef in web-frontend/src/components/execution-view.tsx for scroll anchor
-- [ ] T044 [US3] Implement useEffect with logLines dependency in web-frontend/src/components/execution-view.tsx to auto-scroll with scrollIntoView({ behavior: 'smooth' })
-- [ ] T045 [US3] Add max-height and overflow-y-auto classes to log container in web-frontend/src/components/execution-view.tsx for scrollbar appearance
+- [X] T043 [US3] Implement useRef for logEndRef in web-frontend/src/components/execution-view.tsx for scroll anchor
+- [X] T044 [US3] Implement useEffect with logLines dependency in web-frontend/src/components/execution-view.tsx to auto-scroll with scrollIntoView({ behavior: 'smooth' })
+- [X] T045 [US3] Add max-height and overflow-y-auto classes to log container in web-frontend/src/components/execution-view.tsx for scrollbar appearance
 
 **Checkpoint**: Real-time progress monitoring working with smooth auto-scroll
 
@@ -150,16 +150,16 @@ This is a web app with:
 
 ### Backend Error Handling for US4
 
-- [ ] T046 [P] [US4] Implement graceful URL failure handling in backend/src/api/generate.py: wrap URL fetch in try-except, log [WARN] for failures, continue with remaining URLs (FR-017.1, FR-018.1)
-- [ ] T047 [P] [US4] Implement error event emission in backend/src/api/generate.py: send event: error with error_type and message when script fails (FR-020)
-- [ ] T048 [US4] Add 400 validation error responses in backend/src/api/generate.py for invalid input (empty topic, bad URL format)
+- [X] T046 [P] [US4] Implement graceful URL failure handling in backend/src/api/generate.py: wrap URL fetch in try-except, log [WARN] for failures, continue with remaining URLs (FR-017.1, FR-018.1)
+- [X] T047 [P] [US4] Implement error event emission in backend/src/api/generate.py: send event: error with error_type and message when script fails (FR-020)
+- [X] T048 [US4] Add 400 validation error responses in backend/src/api/generate.py for invalid input (empty topic, bad URL format)
 
 ### Frontend Error Handling for US4
 
-- [ ] T049 [P] [US4] Create web-frontend/src/components/ui/alert.tsx for error display (destructive variant) (FR-013)
-- [ ] T050 [US4] Implement EventSource error handler in web-frontend/src/app/page.tsx: set error state and isLoading=false
-- [ ] T051 [US4] Implement EventSource custom error event handler in web-frontend/src/app/page.tsx: display error alert instead of tabs
-- [ ] T052 [US4] Add error state reset in web-frontend/src/app/page.tsx when starting new generation (clear previous error)
+- [X] T049 [P] [US4] Create web-frontend/src/components/ui/alert.tsx for error display (destructive variant) (FR-013)
+- [X] T050 [US4] Implement EventSource error handler in web-frontend/src/app/page.tsx: set error state and isLoading=false
+- [X] T051 [US4] Implement EventSource custom error event handler in web-frontend/src/app/page.tsx: display error alert instead of tabs
+- [X] T052 [US4] Add error state reset in web-frontend/src/app/page.tsx when starting new generation (clear previous error)
 
 **Checkpoint**: Error handling complete - graceful degradation for unreachable URLs, clear error messages
 
@@ -173,9 +173,9 @@ This is a web app with:
 
 **Agent**: `frontend-developer` (T053-T055)
 
-- [ ] T053 [P] [US5] Create web-frontend/src/components/theme-toggle.tsx with button using next-themes useTheme hook (FR-014)
-- [ ] T054 [P] [US5] Add sun/moon icons from lucide-react in web-frontend/src/components/theme-toggle.tsx for visual indication
-- [ ] T055 [US5] Add ThemeToggle component to header in web-frontend/src/app/page.tsx
+- [X] T053 [P] [US5] Create web-frontend/src/components/theme-toggle.tsx with button using next-themes useTheme hook (FR-014)
+- [X] T054 [P] [US5] Add sun/moon icons from lucide-react in web-frontend/src/components/theme-toggle.tsx for visual indication
+- [X] T055 [US5] Add ThemeToggle component to header in web-frontend/src/app/page.tsx
 
 **Checkpoint**: Theme toggle complete - user can switch themes with localStorage persistence
 
@@ -191,22 +191,22 @@ This is a web app with:
 
 ### Docker Configuration
 
-- [ ] T056 [P] Create web-frontend/Dockerfile with multi-stage build (deps, builder, runner stages) targeting node:20-alpine (FR-022)
-- [ ] T057 [P] Create backend/Dockerfile with multi-stage build (deps, runtime stages) targeting python:3.11-slim (FR-022)
-- [ ] T058 [P] Create .dockerignore in repository root with patterns for node_modules, .git, __pycache__, .next
-- [ ] T059 Create docker-compose.yml in repository root with services: frontend (port 3000), backend (port 8000)
-- [ ] T060 Configure frontend service in docker-compose.yml with environment: NEXT_PUBLIC_API_URL=http://backend:8000
-- [ ] T061 Configure backend service in docker-compose.yml with volumes for src/ (existing script access)
-- [ ] T062 Add shared network in docker-compose.yml for frontend-backend communication
+- [X] T056 [P] Create web-frontend/Dockerfile with multi-stage build (deps, builder, runner stages) targeting node:20-alpine (FR-022)
+- [X] T057 [P] Create backend/Dockerfile with multi-stage build (deps, runtime stages) targeting python:3.11-slim (FR-022)
+- [X] T058 [P] Create .dockerignore in repository root with patterns for node_modules, .git, __pycache__, .next
+- [X] T059 Create docker-compose.yml in repository root with services: frontend (port 3000), backend (port 8000)
+- [X] T060 Configure frontend service in docker-compose.yml with environment: NEXT_PUBLIC_API_URL=http://backend:8000
+- [X] T061 Configure backend service in docker-compose.yml with volumes for src/ (existing script access)
+- [X] T062 Add shared network in docker-compose.yml for frontend-backend communication
 - [ ] T063 Test docker-compose build: run `docker-compose build` from repository root
 - [ ] T064 Test docker-compose startup: run `docker-compose up` and verify services start within 30 seconds (SC-010)
 - [ ] T065 Test end-to-end article generation via Docker: open http://localhost:3000, submit generation, verify result
 
 ### Production Deployment
 
-- [ ] T066 Create deployment documentation in specs/002-web-frontend-docker/quickstart.md for production server setup (FR-023)
-- [ ] T067 Add health check endpoint GET /health in backend/src/main.py returning {"status": "healthy", "active_processes": count}
-- [ ] T068 Configure health checks in docker-compose.yml for both frontend and backend services
+- [X] T066 Create deployment documentation in specs/002-web-frontend-docker/quickstart.md for production server setup (FR-023)
+- [X] T067 Add health check endpoint GET /health in backend/src/main.py returning {"status": "healthy", "active_processes": count}
+- [X] T068 Configure health checks in docker-compose.yml for both frontend and backend services
 - [ ] T069 Test health checks: curl http://localhost:8000/health and http://localhost:3000 after docker-compose up
 
 **Checkpoint**: Docker deployment complete - application fully containerized and production-ready
@@ -219,15 +219,15 @@ This is a web app with:
 
 **Agent**: `frontend-developer` (T070-T072), `python-backend-developer` (T073-T075)
 
-- [ ] T070 [P] Add responsive design adjustments in web-frontend/src/app/globals.css for tablet viewports (FR-025)
-- [ ] T071 [P] Add loading spinner component in web-frontend/src/components/input-form.tsx when isLoading=true (FR-004)
-- [ ] T072 [P] Add confirmation message for clipboard copy in web-frontend/src/components/execution-view.tsx using toast or alert (SC-004)
-- [ ] T073 [P] Add request timeout handling in backend/src/api/generate.py: terminate process after 10 minutes (edge case: long-running generations)
-- [ ] T074 [P] Add logging for process lifecycle events in backend/src/services/process_manager.py (start, cleanup, disconnect)
-- [ ] T075 [P] Add max article length validation in backend/src/api/generate.py: enforce 50,000 character limit (SC-008)
-- [ ] T076 Update CLAUDE.md in repository root to include Next.js 14, FastAPI, Docker Compose technologies
+- [X] T070 [P] Add responsive design adjustments in web-frontend/src/app/globals.css for tablet viewports (FR-025)
+- [X] T071 [P] Add loading spinner component in web-frontend/src/components/input-form.tsx when isLoading=true (FR-004)
+- [X] T072 [P] Add confirmation message for clipboard copy in web-frontend/src/components/execution-view.tsx using toast or alert (SC-004)
+- [X] T073 [P] Add request timeout handling in backend/src/api/generate.py: terminate process after 10 minutes (edge case: long-running generations)
+- [X] T074 [P] Add logging for process lifecycle events in backend/src/services/process_manager.py (start, cleanup, disconnect)
+- [X] T075 [P] Add max article length validation in backend/src/api/generate.py: enforce 50,000 character limit (SC-008)
+- [X] T076 Update CLAUDE.md in repository root to include Next.js 14, FastAPI, Docker Compose technologies
 - [ ] T077 Run quickstart.md validation: follow all setup steps from specs/002-web-frontend-docker/quickstart.md
-- [ ] T078 Add AICODE comments to key technical decisions across web-frontend/src/ and backend/src/ files
+- [X] T078 Add AICODE comments to key technical decisions across web-frontend/src/ and backend/src/ files
 
 ---
 
@@ -397,7 +397,7 @@ Each milestone adds value without breaking previous functionality.
 
 ### Tasks by Agent
 
-**frontend-developer** (40 tasks):
+**frontend-developer** (63 tasks):
 - Phase 1 Setup: T001-T008 (8 tasks)
 - Phase 3 US1 Frontend: T021-T029, T033-T040 (18 tasks)
 - Phase 4 US2 Frontend: T042 (1 task)
@@ -405,8 +405,9 @@ Each milestone adds value without breaking previous functionality.
 - Phase 6 US4 Frontend: T049-T052 (4 tasks)
 - Phase 7 US5: T053-T055 (3 tasks)
 - Phase 9 Polish: T070-T072 (3 tasks)
+- Phase 10 UI Improvements: T081-T083, T094-T103, T108-T110 (23 tasks)
 
-**python-backend-developer** (28 tasks):
+**python-backend-developer** (43 tasks):
 - Phase 1 Setup: T009-T012 (4 tasks)
 - Phase 2 Foundational: T013-T020 (8 tasks)
 - Phase 3 US1 Backend: T030-T032 (3 tasks)
@@ -414,14 +415,227 @@ Each milestone adds value without breaking previous functionality.
 - Phase 6 US4 Backend: T046-T048 (3 tasks)
 - Phase 8 Deployment: T067 (1 task - health endpoint)
 - Phase 9 Polish: T073-T075 (3 tasks)
+- Phase 10 Backend: T080, T084-T093, T104-T107 (15 tasks)
 
 **production-deployment** (14 tasks):
 - Phase 8 Docker: T056-T069 (14 tasks)
 
-**Any agent** (4 tasks):
+**Any agent** (8 tasks):
 - Phase 9 Polish: T076-T078 (3 tasks - documentation and validation)
+- Phase 10 Documentation: T111-T118 (8 tasks)
 
-**Total**: 78 tasks
+**Total**: 118 tasks (78 original + 40 new in Phase 10)
+
+---
+
+## Phase 10: UI Improvements & Russian Localization (Priority: P0) 🎯 Critical
+
+**Goal**: Fix critical bugs, add Russian localization, implement style profile management system
+
+**User Feedback**: Interface doesn't fit on screen, button not working, needs Russian translation, missing style profile management
+
+**Agent**: `python-backend-developer` (T080, T084-T089, T096-T097), `frontend-developer` (T081-T083, T090-T095, T098-T100)
+
+### Sprint 1: Critical Fixes (Week 1)
+
+**Purpose**: Fix broken generation button and basic UX issues
+
+- [ ] T080 [P] Fix SSE format mismatch in backend/src/api/generate.py: change from plain text `data: message\n\n` to JSON format `data: {"type":"log","message":"..."}\n\n` for log/result/error events (CRITICAL - blocks article generation)
+- [ ] T081 [P] Add Russian translation dictionary in web-frontend/src/lib/i18n.ts with all interface strings (labels, buttons, messages, errors)
+- [ ] T082 Implement Russian localization in web-frontend/src/components/input-form.tsx: replace all English text with Russian translations
+- [ ] T083 Implement Russian localization in web-frontend/src/components/execution-view.tsx: tabs, buttons, messages
+- [ ] T084 Optimize interface compactness in web-frontend/src/app/globals.css: reduce padding, adjust spacing for 1280x720 viewport
+- [ ] T085 Add required field indicators (asterisks) in web-frontend/src/components/input-form.tsx for title field
+
+**Checkpoint**: Generation works, interface in Russian, fits on screen
+
+### Sprint 2: Database & Backend API (Week 1-2)
+
+**Purpose**: Setup database and API for style profile management
+
+**Agent**: `python-backend-developer`
+
+- [ ] T086 [P] Create backend/src/db/database.py with SQLite database initialization using SQLAlchemy ORM (path: backend/profiles.db)
+- [ ] T087 [P] Create backend/src/db/models.py with StyleProfileDB model (id, urls_hash, profile_text, source_urls JSON, created_at, updated_at)
+- [ ] T088 Create backend/src/api/profiles.py with FastAPI router for profile management (GET/POST/DELETE /api/profiles endpoints)
+- [ ] T089 Implement GET /api/profiles/current endpoint in backend/src/api/profiles.py: returns current profile or null if not exists
+- [ ] T090 Implement POST /api/profiles endpoint in backend/src/api/profiles.py: accepts source_urls[], calls src/ugly_script.py style extraction, saves to DB
+- [ ] T091 Implement GET /api/profiles/{id} endpoint in backend/src/api/profiles.py: returns profile details by ID
+- [ ] T092 Implement DELETE /api/profiles/{id} endpoint in backend/src/api/profiles.py: deletes profile and allows creating new one
+- [ ] T093 Add TODO comment in backend/src/db/database.py: "Migrate to PostgreSQL for multi-user support in future versions"
+
+**Checkpoint**: Profile database and API ready, tested with curl
+
+### Sprint 3: Style Profile UI & New Form Fields (Week 2)
+
+**Purpose**: Implement style profile management UI and new article fields
+
+**Agent**: `frontend-developer`
+
+- [ ] T094 [P] Create web-frontend/src/types/profile.ts with StyleProfile and ArticleRequest TypeScript interfaces
+- [ ] T095 [P] Install shadcn/ui accordion component in web-frontend/
+- [ ] T096 Create web-frontend/src/components/style-profile-section.tsx with Accordion component: shows status (loaded/not loaded), "View Profile" button, "Update Profile" button
+- [ ] T097 Implement profile status API call in web-frontend/src/components/style-profile-section.tsx: GET /api/profiles/current on component mount
+- [ ] T098 Implement profile viewer dialog in web-frontend/src/components/style-profile-section.tsx: shows profile_text in modal when "View Profile" clicked
+- [ ] T099 Implement profile update form in web-frontend/src/components/style-profile-section.tsx: collapsible URL input (hidden when profile exists), POST /api/profiles on submit
+- [ ] T100 Rename "Topic" field to "Название статьи" in web-frontend/src/components/input-form.tsx (already Russian if T082 done)
+- [ ] T101 Add "Ключевые тезисы" textarea field in web-frontend/src/components/input-form.tsx: optional, multiline, placeholder with examples
+- [ ] T102 Update ArticleRequest interface in web-frontend/src/types/profile.ts: add title and keyPoints fields
+- [ ] T103 Reorganize input-form.tsx with Accordion: Section 1 "Контент" (title, keyPoints), Section 2 "Стиль" (StyleProfileSection), Section 3 "Настройки" (research checkbox)
+
+**Checkpoint**: Style profile management UI complete, new fields integrated
+
+### Sprint 4: Research Mode & Backend Integration (Week 2-3)
+
+**Purpose**: Implement two-stage research generation and integrate new fields
+
+**Agent**: `python-backend-developer` (T104-T106), `frontend-developer` (T107-T109)
+
+#### Backend Integration
+
+- [ ] T104 Update backend/src/api/generate.py POST /api/generate endpoint: accept title, keyPoints, profileId in request body (replace topic/source_urls query params with body)
+- [ ] T105 Implement two-stage research in backend/src/api/generate.py: Stage 1 - call src/research_client.py for info collection (emit log events), Stage 2 - call src/ugly_script.py with research data (emit log events)
+- [ ] T106 Add keyPoints integration in backend/src/api/generate.py: append keyPoints to article generation prompt if provided
+- [ ] T107 Load style profile from DB in backend/src/api/generate.py: query StyleProfileDB by profileId, use profile_text in generation prompt
+
+#### Frontend Integration
+
+- [ ] T108 Update handleSubmit in web-frontend/src/app/page.tsx: change from GET with query params to POST with JSON body (title, keyPoints, profileId, enableResearch)
+- [ ] T109 Update EventSource initialization in web-frontend/src/app/page.tsx: use POST endpoint with fetch() + EventSource polyfill OR migrate to WebSocket
+- [ ] T110 Add profile selection logic in web-frontend/src/components/input-form.tsx: disable "Generate" button if no profile loaded (show warning message)
+
+**Checkpoint**: Two-stage research working, new fields integrated, style profile required for generation
+
+### Sprint 4: Documentation & Testing (Week 3)
+
+**Purpose**: Update documentation and validate all changes
+
+**Agent**: Any agent
+
+- [ ] T111 [P] Update specs/002-web-frontend-docker/spec.md: add new user stories for profile management, title/keyPoints fields, Russian localization
+- [ ] T112 [P] Update specs/002-web-frontend-docker/quickstart.md: document SQLite database location, profile management workflow, new form fields
+- [ ] T113 [P] Add AICODE comments in backend/src/api/profiles.py explaining profile extraction logic and database choice
+- [ ] T114 [P] Add AICODE comments in web-frontend/src/components/style-profile-section.tsx explaining profile status detection and update flow
+- [ ] T115 Manual testing: Generate article with new flow (create profile → enter title → optional keyPoints → enable research → generate)
+- [ ] T116 Manual testing: Test profile update workflow (view profile → delete → create new with different URLs)
+- [ ] T117 Manual testing: Validate Russian translation completeness (check all labels, buttons, messages)
+- [ ] T118 Update CLAUDE.md: add SQLite, profile management, two-stage research to technologies section
+
+**Checkpoint**: Documentation complete, all features tested, ready for deployment
+
+---
+
+## Integration Notes for Phase 10
+
+### Existing Scripts Reuse
+
+**From codebase analysis**, these scripts are already implemented and should be reused:
+
+1. **src/style_hints_extractor.py**:
+   - Uses LLM to extract StyleHints (content_depth, technical_level, preferred_sources, focus_areas) from style profile
+   - Already integrated with ugly_script.py
+   - Reuse in T090 for profile extraction
+
+2. **src/research_client.py**:
+   - Implements research using Perplexity Sonar via OpenRouter
+   - Returns ResearchResult with facts_and_stats, quotes_and_sources
+   - Already integrated with ugly_script.py when `config.research_enabled=True`
+   - Reuse in T105 for two-stage generation
+
+3. **src/style_cache.py**:
+   - File-based caching in `style_profiles/` directory
+   - Uses MD5 hash of sorted URLs as cache key
+   - Currently saves as .txt files
+   - Migration path: Keep file cache as backup, add SQLite as primary storage (T086-T093)
+
+4. **src/models.py**:
+   - StyleProfile, StyleHints, ResearchResult, GeneratedArticle already defined
+   - Reuse existing models, add new StyleProfileDB for SQLAlchemy ORM (T087)
+
+### API Contract Changes
+
+**Breaking change**: POST /api/generate endpoint signature changes
+
+**Old** (T001-T078):
+```
+GET /api/generate?topic=...&source_urls=...&research=true
+```
+
+**New** (T104+):
+```
+POST /api/generate
+Body: {
+  "title": "Название статьи",
+  "keyPoints": "Тезис 1\nТезис 2",
+  "profileId": 123,
+  "enableResearch": true
+}
+```
+
+**Migration**: Frontend must update from EventSource GET to POST with body (T108-T109)
+
+### Database Schema
+
+**StyleProfileDB** (SQLite):
+```sql
+CREATE TABLE style_profiles (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    urls_hash TEXT NOT NULL UNIQUE,  -- MD5 hash from generate_url_hash()
+    profile_text TEXT NOT NULL,       -- LLM-generated style analysis
+    source_urls TEXT NOT NULL,        -- JSON array of URLs
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+**File location**: `backend/profiles.db` (not in src/ to avoid Docker volume conflicts)
+
+### UI Component Hierarchy
+
+```
+page.tsx (main state: title, keyPoints, profileId, isLoading, logLines, finalArticle)
+├── InputForm
+│   ├── Accordion "Контент"
+│   │   ├── Input: "Название статьи" (required)
+│   │   └── Textarea: "Ключевые тезисы" (optional)
+│   ├── Accordion "Стиль"
+│   │   └── StyleProfileSection
+│   │       ├── Status indicator (загружен/не загружен)
+│   │       ├── "Посмотреть профиль" button (if loaded)
+│   │       ├── ProfileViewerDialog (modal with profile_text)
+│   │       └── Collapsible URL input (if not loaded)
+│   └── Accordion "Настройки"
+│       └── Checkbox: "Включить исследование"
+└── ExecutionView (tabs: logs, result)
+```
+
+### Dependencies for Phase 10
+
+- **T080**: Blocks all generation - CRITICAL priority
+- **T081-T085**: Independent UI fixes - can run in parallel
+- **T086-T093**: Database setup - blocks T094-T110 (profile features)
+- **T094-T103**: Frontend profile UI - depends on T086-T093 completion
+- **T104-T110**: Backend integration - depends on T086-T093 + T094-T103
+- **T111-T118**: Documentation - can run parallel with testing, depends on T080-T110
+
+### Parallel Opportunities
+
+**Sprint 1 parallelization**:
+- `python-backend-developer`: T080 (SSE fix)
+- `frontend-developer`: T081-T085 (localization, compactness)
+Both can work simultaneously on different files
+
+**Sprint 2 parallelization**:
+- All T086-T093 are backend tasks - sequential execution by python-backend-developer
+
+**Sprint 3 parallelization**:
+- `frontend-developer`: T094-T103 (all frontend) - some [P] tasks
+- `python-backend-developer`: Can start T104-T107 (backend integration) in parallel
+
+**Sprint 4 parallelization**:
+- `frontend-developer`: T108-T110 (frontend integration)
+- `python-backend-developer`: Assist with testing T115-T117
+- Any agent: T111-T118 (documentation) can run parallel
 
 ---
 
@@ -430,12 +644,15 @@ Each milestone adds value without breaking previous functionality.
 - **[P] tasks**: Different files, no dependencies on same-file modifications
 - **[Story] label**: Maps task to specific user story from spec.md for traceability
 - **Agent assignment**: Based on plan.md Agent Assignment Strategy section
-- **AICODE comments**: Should be added to key decisions throughout implementation (T078)
+- **AICODE comments**: Should be added to key decisions throughout implementation (T078, T113-T114)
 - **MVP scope**: Phase 1 + 2 + 3 (US1) = 32 tasks for working article generator
 - **Production-ready scope**: Add Phase 5 (US3) + Phase 6 (US4) + Phase 8 (Docker) = 59 tasks
-- **Feature-complete scope**: All phases = 78 tasks
+- **Feature-complete scope**: Phase 1-9 = 78 tasks
+- **Enhanced scope**: Phase 1-10 = 118 tasks (adds profile management, localization, new fields)
 - **No tests included**: Feature spec does not request TDD approach
 - **Commit frequency**: Commit after each task or logical group of parallel tasks
 - **Checkpoints**: Stop at any user story checkpoint to validate independently
 - **Critical path**: Phase 2 (Foundational) blocks all user stories - highest priority
 - **Next.js API Routes**: Do NOT use app/api/ directory - frontend connects directly to FastAPI backend (see plan.md AICODE-NOTE)
+- **Existing scripts**: src/style_hints_extractor.py, src/research_client.py, src/style_cache.py already implemented - reuse in Phase 10
+- **Database migration**: SQLite now (single user), PostgreSQL later (multi-user) - see T093 TODO comment
