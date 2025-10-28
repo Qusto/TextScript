@@ -69,9 +69,9 @@ async def health() -> dict[str, str]:
     }
 
 
-# AICODE-TODO: Import and include generate router when implemented
-# from src.api.generate import router as generate_router
-# app.include_router(generate_router, prefix="/api", tags=["generation"])
+# AICODE-NOTE: Import and include generate router (T017-T020 implementation)
+from src.api.generate import router as generate_router
+app.include_router(generate_router, prefix="/api", tags=["generation"])
 
 if __name__ == "__main__":
     import uvicorn
