@@ -17,6 +17,8 @@ loguru = "^0.7.0"
 # AICODE-NOTE: Pydantic for request/response validation
 pydantic = "^2.0.0"
 pydantic-settings = "^2.0.0"
+# AICODE-NOTE: T086 - SQLAlchemy for database ORM (style profiles storage)
+sqlalchemy = "^2.0.0"
 
 [tool.poetry.group.dev.dependencies]
 # AICODE-NOTE: pytest-asyncio for async test support

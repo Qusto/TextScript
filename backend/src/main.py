@@ -55,23 +55,47 @@ async def root() -> dict[str, str]:
     }
 
 
+@app.on_event("startup")
+async def startup_event():
+    """
+    Initialize application on startup.
+
+    AICODE-NOTE: T086 - Database initialization on application start
+    Creates database tables if they don't exist.
+    Safe to call multiple times (idempotent).
+    """
+    from src.db.database import init_db
+
+    logger.info("Application startup: initializing database...")
+    init_db()
+    logger.success("Application startup complete")
+
+
 @app.get("/health")
-async def health() -> dict[str, str]:
+async def health() -> dict[str, str | int]:
     """
     Health check endpoint.
 
-    AICODE-NOTE: Used by Docker health checks and monitoring systems.
-    Will be extended to include active process count in later phases.
+    AICODE-NOTE: T067 - Extended health check with active process count.
+    Used by Docker health checks and monitoring systems.
+    Returns active_processes count for operational visibility.
     """
+    from src.api.generate import process_manager
+
     logger.debug("Health check accessed")
     return {
-        "status": "healthy"
+        "status": "healthy",
+        "active_processes": len(process_manager.active_processes)
     }
 
 
-# AICODE-NOTE: Import and include generate router (T017-T020 implementation)
+# AICODE-NOTE: Import and include routers
 from src.api.generate import router as generate_router
+from src.api.profiles import router as profiles_router
+
 app.include_router(generate_router, prefix="/api", tags=["generation"])
+# AICODE-NOTE: T088 - Include profiles router for style profile management
+app.include_router(profiles_router, tags=["profiles"])
 
 if __name__ == "__main__":
     import uvicorn

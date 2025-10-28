@@ -455,16 +455,16 @@ Each milestone adds value without breaking previous functionality.
 
 **Agent**: `python-backend-developer`
 
-- [ ] T086 [P] Create backend/src/db/database.py with SQLite database initialization using SQLAlchemy ORM (path: backend/profiles.db)
-- [ ] T087 [P] Create backend/src/db/models.py with StyleProfileDB model (id, urls_hash, profile_text, source_urls JSON, created_at, updated_at)
-- [ ] T088 Create backend/src/api/profiles.py with FastAPI router for profile management (GET/POST/DELETE /api/profiles endpoints)
-- [ ] T089 Implement GET /api/profiles/current endpoint in backend/src/api/profiles.py: returns current profile or null if not exists
-- [ ] T090 Implement POST /api/profiles endpoint in backend/src/api/profiles.py: accepts source_urls[], calls src/ugly_script.py style extraction, saves to DB
-- [ ] T091 Implement GET /api/profiles/{id} endpoint in backend/src/api/profiles.py: returns profile details by ID
-- [ ] T092 Implement DELETE /api/profiles/{id} endpoint in backend/src/api/profiles.py: deletes profile and allows creating new one
-- [ ] T093 Add TODO comment in backend/src/db/database.py: "Migrate to PostgreSQL for multi-user support in future versions"
+- [X] T086 [P] Create backend/src/db/database.py with SQLite database initialization using SQLAlchemy ORM (path: backend/profiles.db)
+- [X] T087 [P] Create backend/src/db/models.py with StyleProfileDB model (id, urls_hash, profile_text, source_urls JSON, created_at, updated_at)
+- [X] T088 Create backend/src/api/profiles.py with FastAPI router for profile management (GET/POST/DELETE /api/profiles endpoints)
+- [X] T089 Implement GET /api/profiles/current endpoint in backend/src/api/profiles.py: returns current profile or null if not exists
+- [X] T090 Implement POST /api/profiles endpoint in backend/src/api/profiles.py: accepts source_urls[], calls src/ugly_script.py style extraction, saves to DB
+- [X] T091 Implement GET /api/profiles/{id} endpoint in backend/src/api/profiles.py: returns profile details by ID
+- [X] T092 Implement DELETE /api/profiles/{id} endpoint in backend/src/api/profiles.py: deletes profile and allows creating new one
+- [X] T093 Add TODO comment in backend/src/db/database.py: "Migrate to PostgreSQL for multi-user support in future versions"
 
-**Checkpoint**: Profile database and API ready, tested with curl
+**Checkpoint**: ✅ Profile database and API ready, tested with curl
 
 ### Sprint 3: Style Profile UI & New Form Fields (Week 2)
 
