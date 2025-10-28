@@ -440,14 +440,14 @@ Each milestone adds value without breaking previous functionality.
 
 **Purpose**: Fix broken generation button and basic UX issues
 
-- [ ] T080 [P] Fix SSE format mismatch in backend/src/api/generate.py: change from plain text `data: message\n\n` to JSON format `data: {"type":"log","message":"..."}\n\n` for log/result/error events (CRITICAL - blocks article generation)
-- [ ] T081 [P] Add Russian translation dictionary in web-frontend/src/lib/i18n.ts with all interface strings (labels, buttons, messages, errors)
-- [ ] T082 Implement Russian localization in web-frontend/src/components/input-form.tsx: replace all English text with Russian translations
-- [ ] T083 Implement Russian localization in web-frontend/src/components/execution-view.tsx: tabs, buttons, messages
-- [ ] T084 Optimize interface compactness in web-frontend/src/app/globals.css: reduce padding, adjust spacing for 1280x720 viewport
-- [ ] T085 Add required field indicators (asterisks) in web-frontend/src/components/input-form.tsx for title field
+- [X] T080 [P] Fix SSE format mismatch in backend/src/api/generate.py: change from plain text `data: message\n\n` to JSON format `data: {"type":"log","message":"..."}\n\n` for log/result/error events (CRITICAL - blocks article generation)
+- [X] T081 [P] Add Russian translation dictionary in web-frontend/src/lib/i18n.ts with all interface strings (labels, buttons, messages, errors)
+- [X] T082 Implement Russian localization in web-frontend/src/components/input-form.tsx: replace all English text with Russian translations
+- [X] T083 Implement Russian localization in web-frontend/src/components/execution-view.tsx: tabs, buttons, messages
+- [X] T084 Optimize interface compactness in web-frontend/src/app/globals.css: reduce padding, adjust spacing for 1280x720 viewport
+- [X] T085 Add required field indicators (asterisks) in web-frontend/src/components/input-form.tsx for title field
 
-**Checkpoint**: Generation works, interface in Russian, fits on screen
+**Checkpoint**: ✅ Generation works, interface in Russian, fits on screen
 
 ### Sprint 2: Database & Backend API (Week 1-2)
 

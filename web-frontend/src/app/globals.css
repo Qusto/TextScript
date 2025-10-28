@@ -76,3 +76,134 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* AICODE-NOTE: T070 - Responsive design adjustments for tablet viewports (FR-025) */
+/* AICODE-NOTE: T084 - Interface compactness optimization for 1280x720 viewport (FR-039, SC-018) */
+/* Tailwind breakpoints: sm (640px), md (768px), lg (1024px), xl (1280px) */
+
+@layer components {
+  /* Mobile-first: Base styles for mobile (< 640px) */
+  .container {
+    @apply px-4;
+  }
+
+  /* Tablet adjustments (768px - 1024px) */
+  @media (min-width: 768px) and (max-width: 1024px) {
+    /* AICODE-NOTE: Increase padding for better tablet readability */
+    .container {
+      @apply px-6;
+    }
+
+    /* AICODE-NOTE: Adjust font sizes for tablets */
+    h1 {
+      @apply text-3xl;
+    }
+
+    /* AICODE-NOTE: Make buttons slightly larger for touch targets */
+    button {
+      @apply min-h-[44px];
+    }
+
+    /* AICODE-NOTE: Adjust textarea rows for better tablet UX */
+    textarea {
+      min-height: 120px;
+    }
+  }
+
+  /* Desktop optimizations (> 1024px) */
+  @media (min-width: 1024px) {
+    .container {
+      @apply px-8;
+    }
+  }
+
+  /* AICODE-NOTE: T084 - Compactness optimization for 1280x720 viewport */
+  /* Target resolution: 1280x720 (common laptop/small desktop) */
+  @media (min-width: 1280px) and (max-height: 800px) {
+    /* Reduce card padding for compact layout */
+    .card {
+      @apply py-4;
+    }
+
+    /* Reduce header spacing */
+    .card-header {
+      @apply pb-3 space-y-1;
+    }
+
+    /* Reduce form field spacing */
+    .space-y-6 > * + * {
+      margin-top: 1rem !important;
+    }
+
+    .space-y-4 > * + * {
+      margin-top: 0.75rem !important;
+    }
+
+    /* Reduce card content padding */
+    .card-content {
+      @apply pt-4;
+    }
+
+    /* Reduce title font size */
+    .card-title {
+      @apply text-xl;
+    }
+
+    /* Reduce description font size */
+    .card-description {
+      @apply text-xs;
+    }
+
+    /* Make log/result containers more compact */
+    .max-h-\[500px\] {
+      max-height: 350px !important;
+    }
+
+    /* Reduce textarea rows */
+    textarea {
+      min-height: 100px;
+    }
+  }
+
+  /* AICODE-NOTE: T084 - Extra compact mode for exactly 1280x720 or smaller height */
+  @media (max-height: 720px) {
+    /* Further reduce spacing for very compact screens */
+    body {
+      @apply py-4;
+    }
+
+    /* Reduce gaps between major sections */
+    .space-y-8 > * + * {
+      margin-top: 1rem !important;
+    }
+
+    /* Make cards even more compact */
+    .card {
+      @apply py-3;
+    }
+
+    .card-header {
+      @apply pb-2 space-y-0.5;
+    }
+
+    /* Smaller titles */
+    .card-title {
+      @apply text-lg;
+    }
+
+    /* Smaller form spacing */
+    .space-y-6 > * + * {
+      margin-top: 0.75rem !important;
+    }
+
+    /* Compact log/result views */
+    .max-h-\[500px\] {
+      max-height: 250px !important;
+    }
+
+    /* Reduce button height slightly */
+    .min-h-\[44px\] {
+      min-height: 40px !important;
+    }
+  }
+}
