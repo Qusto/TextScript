@@ -55,14 +55,14 @@ This is a web app with:
 
 ### Backend Foundation
 
-- [ ] T013 Create backend/src/services/process_manager.py with ProcessTracker dataclass (FR-016.2)
-- [ ] T014 Implement ProcessManager class in backend/src/services/process_manager.py with active_processes dict tracking
-- [ ] T015 Implement cleanup_process() method in backend/src/services/process_manager.py with SIGTERM → SIGKILL logic (3s timeout)
-- [ ] T016 Implement track_process() context manager in backend/src/services/process_manager.py for automatic cleanup on disconnect
-- [ ] T017 Create backend/src/api/generate.py with FastAPI router and SSE streaming endpoint skeleton (FR-016)
-- [ ] T018 Implement subprocess spawning in backend/src/api/generate.py using asyncio.create_subprocess_exec (FR-017)
-- [ ] T019 Implement stdout streaming loop in backend/src/api/generate.py that yields SSE data: messages (FR-018)
-- [ ] T020 Add client disconnect detection in backend/src/api/generate.py using request.is_disconnected() (FR-016.1)
+- [X] T013 Create backend/src/services/process_manager.py with ProcessTracker dataclass (FR-016.2)
+- [X] T014 Implement ProcessManager class in backend/src/services/process_manager.py with active_processes dict tracking
+- [X] T015 Implement cleanup_process() method in backend/src/services/process_manager.py with SIGTERM → SIGKILL logic (3s timeout)
+- [X] T016 Implement track_process() context manager in backend/src/services/process_manager.py for automatic cleanup on disconnect
+- [X] T017 Create backend/src/api/generate.py with FastAPI router and SSE streaming endpoint skeleton (FR-016)
+- [X] T018 Implement subprocess spawning in backend/src/api/generate.py using asyncio.create_subprocess_exec (FR-017)
+- [X] T019 Implement stdout streaming loop in backend/src/api/generate.py that yields SSE data: messages (FR-018)
+- [X] T020 Add client disconnect detection in backend/src/api/generate.py using request.is_disconnected() (FR-016.1)
 
 **Checkpoint**: Backend API ready - frontend can now integrate with SSE streaming
 
