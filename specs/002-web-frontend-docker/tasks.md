@@ -181,9 +181,11 @@ This is a web app with:
 
 ---
 
-## Phase 8: Docker Deployment (Priority: P1)
+## Phase 8: Docker Deployment (Priority: P1) ⚠️ EXECUTE AFTER PHASE 10
 
 **Goal**: Entire application deployable to production via Docker Compose
+
+**⚠️ EXECUTION ORDER**: This phase is executed AFTER Phase 10 (all Sprints) to package the final version with all features
 
 **Independent Test**: Run `docker-compose up --build`, verify frontend at http://localhost:3000, backend at http://localhost:8000, generate test article end-to-end
 
@@ -233,7 +235,21 @@ This is a web app with:
 
 ## Dependencies & Execution Order
 
-### Phase Dependencies
+### ⚠️ UPDATED EXECUTION SEQUENCE (2025-10-29)
+
+**ACTUAL IMPLEMENTATION ORDER** (revised based on user requirements):
+1. ✅ Phase 1-7: Setup + User Stories (COMPLETED)
+2. ✅ Phase 9: Polish (COMPLETED)
+3. ✅ Phase 10 Sprint 1: Critical Fixes (T080-T085) (COMPLETED)
+4. ✅ Phase 10 Sprint 2: Database & Backend API (T086-T093) (COMPLETED)
+5. 🎯 **Phase 10 Sprint 3: Style Profile UI** (T094-T103) ← **CURRENT PRIORITY**
+6. 🎯 **Phase 10 Sprint 4: Research Mode & Integration** (T104-T110) ← **NEXT**
+7. 🐳 **Phase 8: Docker Deployment - FINAL** (T063-T065, T069, T077) ← **PACKAGE FOR PRODUCTION**
+8. 📝 **Phase 10 Sprint 4: Documentation** (T111-T118) ← **FINALIZE**
+
+**Rationale**: Complete all functional features (Sprint 3 + Sprint 4) before final Docker packaging to ensure production deployment includes complete feature set.
+
+### Phase Dependencies (Original Plan)
 
 - **Setup (Phase 1)**: No dependencies - can start immediately
 - **Foundational (Phase 2)**: Depends on Setup completion - BLOCKS all user stories
@@ -243,12 +259,32 @@ This is a web app with:
   - **US3 (Phase 5)**: Can start after US1 T027 (log display exists) - Minor integration with US1
   - **US4 (Phase 6)**: Can start after Phase 2 - Independent error handling
   - **US5 (Phase 7)**: Can start after Phase 1 - Completely independent
-- **Docker Deployment (Phase 8)**: Depends on US1 completion (MVP must work) - Recommended after US1, US3, US4 complete
+- **Phase 10 Sprints**: Depends on Phase 1-7 completion
+  - **Sprint 1** (T080-T085): Fixes critical bugs - HIGHEST PRIORITY
+  - **Sprint 2** (T086-T093): Database/API - BLOCKS Sprint 3 & 4
+  - **Sprint 3** (T094-T103): UI components - DEPENDS on Sprint 2
+  - **Sprint 4** (T104-T110): Integration - DEPENDS on Sprint 3
+- **Docker Deployment (Phase 8)**: ⚠️ MOVED TO END - Execute after Phase 10 completion
 - **Polish (Phase 9)**: Depends on all desired user stories being complete
 
 ### User Story Priorities
 
-**Recommended Implementation Order**:
+**⚠️ UPDATED - Actual Implementation Order** (2025-10-29):
+1. ✅ **Phase 1 + 2**: Setup + Foundational (COMPLETED)
+2. ✅ **Phase 3 (US1)**: Submit Article Generation Request (COMPLETED)
+3. ✅ **Phase 5 (US3)**: Monitor Generation Progress (COMPLETED)
+4. ✅ **Phase 6 (US4)**: Handle Generation Errors (COMPLETED)
+5. ✅ **Phase 4 (US2)**: Enable Research Mode (COMPLETED)
+6. ✅ **Phase 7 (US5)**: Toggle Theme (COMPLETED)
+7. ✅ **Phase 9**: Polish (COMPLETED)
+8. ✅ **Phase 10 Sprint 1**: Critical Fixes - SSE format, Russian i18n (COMPLETED)
+9. ✅ **Phase 10 Sprint 2**: Database & Profile API (COMPLETED)
+10. 🎯 **Phase 10 Sprint 3**: Style Profile UI & New Form Fields ← **CURRENT**
+11. 🎯 **Phase 10 Sprint 4**: Research Mode Integration & Backend Updates ← **NEXT**
+12. 🐳 **Phase 8**: Docker Deployment - Final Production Package ← **THEN**
+13. 📝 **Phase 10 Documentation**: Update docs & final testing ← **FINALIZE**
+
+**Original Recommended Order** (for reference):
 1. **Phase 1 + 2**: Setup + Foundational (REQUIRED)
 2. **Phase 3 (US1)**: Submit Article Generation Request (P1 - MVP) ⭐
 3. **Phase 5 (US3)**: Monitor Generation Progress (P1 - Critical UX) ⭐
@@ -343,7 +379,44 @@ Task T066-T069: Add production docs and health checks
 
 ## Implementation Strategy
 
-### MVP First (User Story 1 Only)
+### ⚠️ CURRENT STRATEGY (2025-10-29): Feature Complete → Docker Package
+
+**Revised execution plan** (all base features already complete):
+
+✅ **COMPLETED**:
+1. Phase 1-7: Core application (Setup, User Stories, Theme)
+2. Phase 9: Polish & cross-cutting concerns
+3. Phase 10 Sprint 1: Critical fixes (SSE format, Russian i18n)
+4. Phase 10 Sprint 2: Database & Profile API (SQLite + endpoints)
+
+🎯 **CURRENT PRIORITY - Sprint 3** (~4-6 hours):
+1. Create TypeScript types for profiles (T094)
+2. Install shadcn/ui accordion component (T095)
+3. Build StyleProfileSection component (T096-T099)
+4. Reorganize input form with new fields (T100-T103)
+
+🎯 **NEXT - Sprint 4** (~6-8 hours):
+1. Update backend /api/generate to accept new request body (T104)
+2. Implement two-stage research flow (T105-T107)
+3. Update frontend to use POST with new fields (T108-T110)
+
+🐳 **FINAL - Docker Production Package** (~2-3 hours):
+1. Test docker-compose build with all features (T063)
+2. Test docker-compose startup and health checks (T064, T069)
+3. End-to-end validation via Docker (T065)
+4. Validate quickstart.md instructions (T077)
+
+📝 **FINALIZE - Documentation** (~2 hours):
+1. Update specs and quickstart docs (T111-T112)
+2. Add AICODE comments (T113-T114)
+3. Manual testing of all flows (T115-T117)
+4. Update CLAUDE.md (T118)
+
+**Total remaining time**: ~14-19 hours to production deployment
+
+---
+
+### MVP First (User Story 1 Only) - ORIGINAL PLAN
 
 **Fastest path to working product**:
 
@@ -472,18 +545,18 @@ Each milestone adds value without breaking previous functionality.
 
 **Agent**: `frontend-developer`
 
-- [ ] T094 [P] Create web-frontend/src/types/profile.ts with StyleProfile and ArticleRequest TypeScript interfaces
-- [ ] T095 [P] Install shadcn/ui accordion component in web-frontend/
-- [ ] T096 Create web-frontend/src/components/style-profile-section.tsx with Accordion component: shows status (loaded/not loaded), "View Profile" button, "Update Profile" button
-- [ ] T097 Implement profile status API call in web-frontend/src/components/style-profile-section.tsx: GET /api/profiles/current on component mount
-- [ ] T098 Implement profile viewer dialog in web-frontend/src/components/style-profile-section.tsx: shows profile_text in modal when "View Profile" clicked
-- [ ] T099 Implement profile update form in web-frontend/src/components/style-profile-section.tsx: collapsible URL input (hidden when profile exists), POST /api/profiles on submit
-- [ ] T100 Rename "Topic" field to "Название статьи" in web-frontend/src/components/input-form.tsx (already Russian if T082 done)
-- [ ] T101 Add "Ключевые тезисы" textarea field in web-frontend/src/components/input-form.tsx: optional, multiline, placeholder with examples
-- [ ] T102 Update ArticleRequest interface in web-frontend/src/types/profile.ts: add title and keyPoints fields
-- [ ] T103 Reorganize input-form.tsx with Accordion: Section 1 "Контент" (title, keyPoints), Section 2 "Стиль" (StyleProfileSection), Section 3 "Настройки" (research checkbox)
+- [X] T094 [P] Create web-frontend/src/types/profile.ts with StyleProfile and ArticleRequest TypeScript interfaces
+- [X] T095 [P] Install shadcn/ui accordion component in web-frontend/
+- [X] T096 Create web-frontend/src/components/style-profile-section.tsx with Accordion component: shows status (loaded/not loaded), "View Profile" button, "Update Profile" button
+- [X] T097 Implement profile status API call in web-frontend/src/components/style-profile-section.tsx: GET /api/profiles/current on component mount
+- [X] T098 Implement profile viewer dialog in web-frontend/src/components/style-profile-section.tsx: shows profile_text in modal when "View Profile" clicked
+- [X] T099 Implement profile update form in web-frontend/src/components/style-profile-section.tsx: collapsible URL input (hidden when profile exists), POST /api/profiles on submit
+- [X] T100 Rename "Topic" field to "Название статьи" in web-frontend/src/components/input-form.tsx (already Russian if T082 done)
+- [X] T101 Add "Ключевые тезисы" textarea field in web-frontend/src/components/input-form.tsx: optional, multiline, placeholder with examples
+- [X] T102 Update ArticleRequest interface in web-frontend/src/types/profile.ts: add title and keyPoints fields
+- [X] T103 Reorganize input-form.tsx with Accordion: Section 1 "Контент" (title, keyPoints), Section 2 "Стиль" (StyleProfileSection), Section 3 "Настройки" (research checkbox)
 
-**Checkpoint**: Style profile management UI complete, new fields integrated
+**Checkpoint**: ✅ Style profile management UI complete, new fields integrated (2025-10-29)
 
 ### Sprint 4: Research Mode & Backend Integration (Week 2-3)
 

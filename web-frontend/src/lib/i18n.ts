@@ -3,10 +3,24 @@
 // Used by components to display Russian text instead of English
 
 export const ru = {
-  // InputForm component
+  // InputForm component (updated for Phase 10)
   inputForm: {
-    title: "Генерация статьи",
+    formTitle: "Генерация статьи",
     description: "Введите тему и URL-источники для создания статьи в определённом стиле",
+
+    // AICODE-NOTE: T100 - Renamed "topic" to "title" for Phase 10
+    title: {
+      label: "Название статьи",
+      placeholder: "Введите название статьи...",
+    },
+
+    // AICODE-NOTE: T101 - New field for key points/theses
+    keyPoints: {
+      label: "Ключевые тезисы",
+      placeholder: "Тезис 1: Важность AI в современном мире\nТезис 2: Практическое применение ML\nТезис 3: Будущее автоматизации",
+    },
+
+    // Old fields (kept for backward compatibility during migration)
     topic: {
       label: "Тема",
       placeholder: "Введите тему статьи...",
@@ -15,12 +29,25 @@ export const ru = {
       label: "URL-источники",
       placeholder: "Введите URL-адреса (по одному на строку)...",
     },
+
     research: {
-      label: "Включить режим исследования (будущая функция)",
+      label: "Включить режим исследования",
     },
     button: {
       submit: "Сгенерировать",
       submitting: "Генерация...",
+    },
+
+    // AICODE-NOTE: T103 - Accordion section titles
+    sections: {
+      content: "Контент",
+      style: "Стиль",
+      settings: "Настройки",
+    },
+
+    // AICODE-NOTE: T110 - Warning when no profile selected
+    warnings: {
+      noProfile: "⚠ Сначала создайте профиль стиля в разделе 'Стиль'",
     },
   },
 
@@ -112,10 +139,11 @@ export const translations: Translations = ru
 // Helper function to get nested translation
 export function t(path: string): string {
   const keys = path.split('.')
-  let value: any = translations
+  // AICODE-NOTE: Using Record type instead of any for type safety while allowing nested access
+  let value: Record<string, unknown> | unknown = translations
 
   for (const key of keys) {
-    value = value?.[key]
+    value = (value as Record<string, unknown>)?.[key]
     if (value === undefined) {
       console.warn(`Translation not found for path: ${path}`)
       return path

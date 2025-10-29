@@ -1,101 +1,147 @@
-import Image from "next/image";
+// AICODE-NOTE: Main page for article generation with SSE streaming (T033-T040)
+// Integrates InputForm and ExecutionView components
+// Uses EventSource API for real-time progress updates from backend
+'use client'
+
+import { useState, useRef, useEffect } from 'react'
+import { InputForm } from '@/components/input-form'
+import { ExecutionView } from '@/components/execution-view'
+import { ThemeToggle } from '@/components/theme-toggle'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { AlertCircle } from 'lucide-react'
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  // AICODE-NOTE: T033 - State management for article generation
+  const [isLoading, setIsLoading] = useState(false)
+  const [logLines, setLogLines] = useState<string[]>([])
+  const [finalArticle, setFinalArticle] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  // AICODE-TODO: T111 - Add profile state management
+  // For now, set to null to allow component to compile
+  // Will be integrated with StyleProfileSection in future task
+  const [currentProfile] = useState(null)
+
+  // AICODE-NOTE: Ref to store EventSource instance for cleanup
+  const eventSourceRef = useRef<EventSource | null>(null)
+
+  // AICODE-NOTE: Cleanup EventSource on component unmount
+  useEffect(() => {
+    return () => {
+      if (eventSourceRef.current) {
+        eventSourceRef.current.close()
+      }
+    }
+  }, [])
+
+  // AICODE-NOTE: T034 - handleSubmit creates EventSource with query parameters
+  // AICODE-TODO: T108 - Will be updated to use POST /api/generate with profile_id
+  const handleSubmit = (data: { title: string; keyPoints?: string; enableResearch: boolean }) => {
+    // AICODE-NOTE: T052 - Reset all state including error when starting new generation
+    setIsLoading(true)
+    setLogLines([])
+    setFinalArticle(null)
+    setError(null)
+
+    // Close existing connection if any
+    if (eventSourceRef.current) {
+      eventSourceRef.current.close()
+    }
+
+    // AICODE-NOTE: Temporary compatibility layer - maps new interface to old API
+    // TODO: T108 - Replace with POST request using profile_id
+    const params = new URLSearchParams({
+      topic: data.title, // Map title -> topic for old API
+      source_urls: '', // Placeholder - will use profile_id in T108
+      research: data.enableResearch.toString(),
+    })
+
+    const url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/generate?${params}`
+
+    // AICODE-NOTE: T034 - Create EventSource for SSE connection
+    const eventSource = new EventSource(url)
+    eventSourceRef.current = eventSource
+
+    // AICODE-NOTE: T035 - Message handler appends log lines to array
+    eventSource.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data)
+
+        if (data.type === 'log') {
+          // Append log message to logLines array
+          setLogLines((prev) => [...prev, data.message])
+        } else if (data.type === 'result') {
+          // AICODE-NOTE: T036 - Result handler sets finalArticle and isLoading=false
+          setFinalArticle(data.article)
+          setIsLoading(false)
+
+          // AICODE-NOTE: T037 - Close EventSource connection after receiving result
+          eventSource.close()
+          eventSourceRef.current = null
+        } else if (data.type === 'error') {
+          // AICODE-NOTE: T051 - Handle backend error events (custom 'error' event type)
+          // Display error message in Alert component with destructive variant
+          setError(data.message || 'An error occurred')
+          setIsLoading(false)
+          eventSource.close()
+          eventSourceRef.current = null
+        }
+      } catch (err) {
+        console.error('Failed to parse SSE message:', err)
+      }
+    }
+
+    // AICODE-NOTE: T050 - EventSource.onerror handler for connection failures
+    // Triggers on network errors, server disconnections, or invalid SSE format
+    eventSource.onerror = (err) => {
+      console.error('EventSource error:', err)
+      setError('Connection error. Please try again.')
+      setIsLoading(false)
+      eventSource.close()
+      eventSourceRef.current = null
+    }
+  }
+
+  return (
+    // AICODE-NOTE: T040 - Layout: single-column max-w-3xl container with dark zinc theme
+    // Using min-h-screen for full viewport height and centered content
+    <div className="min-h-screen bg-background">
+      <main className="container mx-auto px-4 py-8 max-w-3xl">
+        {/* Header with Theme Toggle */}
+        {/* AICODE-NOTE: T055 - Added ThemeToggle component to header for theme switching */}
+        <div className="mb-8">
+          <div className="flex justify-between items-center mb-6">
+            <div className="flex-1" />
+            <ThemeToggle />
+          </div>
+          <div className="text-center">
+            <h1 className="text-4xl font-bold tracking-tight mb-2">
+              TextScript
+            </h1>
+            <p className="text-muted-foreground">
+              AI-powered article generation with real-time progress tracking
+            </p>
+          </div>
+        </div>
+
+        {/* AICODE-NOTE: T040 - Vertical spacing with space-y-8 for consistent gaps */}
+        <div className="space-y-8">
+          {/* Input Form */}
+          <InputForm onSubmit={handleSubmit} isLoading={isLoading} currentProfile={currentProfile} />
+
+          {/* AICODE-NOTE: T051 - Error Display using shadcn/ui Alert with destructive variant */}
+          {/* Shows above ExecutionView to ensure visibility */}
+          {error && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+
+          {/* Execution View */}
+          <ExecutionView logLines={logLines} finalArticle={finalArticle} />
         </div>
       </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
     </div>
-  );
+  )
 }
