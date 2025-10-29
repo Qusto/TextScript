@@ -6,7 +6,7 @@ export const ru = {
   // InputForm component (updated for Phase 10)
   inputForm: {
     formTitle: "Генерация статьи",
-    description: "Введите тему и URL-источники для создания статьи в определённом стиле",
+    description: "Укажите детали для генерации статьи в вашем стиле",
 
     // AICODE-NOTE: T100 - Renamed "topic" to "title" for Phase 10
     title: {

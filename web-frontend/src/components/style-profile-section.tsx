@@ -66,19 +66,24 @@ export default function StyleProfileSection({ onProfileUpdate }: StyleProfileSec
 
       const response = await fetch('/api/profiles/current')
 
+      // AICODE-NOTE: Sprint 3.1 - Distinguish between API errors and missing profile
+      // Only show red error for actual failures (network, 500s)
+      // Missing profile (null response) is normal state, not an error
       if (!response.ok) {
+        // 4xx/5xx errors are real errors
         throw new Error(`API error: ${response.status}`)
       }
 
       const data = await response.json()
       setProfile(data) // null if no profile exists
 
-      // AICODE-NOTE: Show create form automatically if no profile
+      // AICODE-NOTE: Show create form automatically if no profile (not an error state)
       if (!data) {
         setIsCreating(true)
       }
     } catch (err) {
       console.error('Failed to load profile status:', err)
+      // AICODE-NOTE: Only set error for actual API failures (network, 500s)
       setError('Ошибка загрузки профиля')
     } finally {
       setIsLoading(false)
@@ -199,7 +204,9 @@ export default function StyleProfileSection({ onProfileUpdate }: StyleProfileSec
                 </span>
               </>
             ) : (
-              <span className="text-yellow-600 dark:text-yellow-400">⚠ Профиль не загружен</span>
+              // AICODE-NOTE: Sprint 3.1 - Friendly empty state instead of warning
+              // Guides user to create profile without negative framing
+              <span className="text-blue-600 dark:text-blue-400">→ Создайте профиль стиля для начала работы</span>
             )}
           </CardDescription>
         </CardHeader>

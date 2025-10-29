@@ -43,6 +43,9 @@ export function InputForm({ onSubmit, isLoading, currentProfile }: InputFormProp
 
   const [enableResearch, setEnableResearch] = useState(false)
 
+  // AICODE-NOTE: Sprint 3.1 - Track current accordion section for progress stepper
+  const [currentSection, setCurrentSection] = useState<string>('content')
+
   // AICODE-NOTE: T110 - Form valid only when profile exists AND title is not empty
   // This ensures user cannot generate article without creating style profile first
   const isFormValid = currentProfile !== null && title.trim() !== ''
@@ -68,24 +71,48 @@ export function InputForm({ onSubmit, isLoading, currentProfile }: InputFormProp
       <CardHeader>
         <CardTitle>{ru.inputForm.formTitle}</CardTitle>
         <CardDescription>
-          {ru.inputForm.description}
+          Укажите детали для генерации статьи в вашем стиле
         </CardDescription>
       </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* AICODE-NOTE: T103 - Accordion with type="multiple" allows all sections open by default
-              This provides better UX as users can see all fields at once without clicking */}
-          <Accordion type="multiple" defaultValue={["content", "style", "settings"]} className="w-full">
+      <CardContent className="p-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {/* AICODE-NOTE: Sprint 3.1 - Progress stepper shows workflow: Content → Style → Settings
+              Helps users understand the 3-step process and current position */}
+          <div className="flex items-center justify-center gap-2 mb-4 text-sm">
+            <span className={`font-medium transition-colors ${currentSection === 'content' ? 'text-blue-600 dark:text-blue-400' : 'text-muted-foreground'}`}>
+              Шаг 1: Контент
+            </span>
+            <span className="text-muted-foreground">→</span>
+            <span className={`font-medium transition-colors ${currentSection === 'style' ? 'text-green-600 dark:text-green-400' : 'text-muted-foreground'}`}>
+              Шаг 2: Стиль
+            </span>
+            <span className="text-muted-foreground">→</span>
+            <span className={`font-medium transition-colors ${currentSection === 'settings' ? 'text-purple-600 dark:text-purple-400' : 'text-muted-foreground'}`}>
+              Шаг 3: Настройки
+            </span>
+          </div>
+
+          {/* AICODE-NOTE: Sprint 3.1 - Changed to type="single" to prevent cognitive overload
+              Progressive disclosure pattern: user focuses on one section at a time
+              Only "Контент" section open by default to start workflow */}
+          <Accordion
+            type="single"
+            defaultValue="content"
+            collapsible
+            className="w-full"
+            onValueChange={(value) => setCurrentSection(value || 'content')}
+          >
 
             {/* AICODE-NOTE: T103 - Section 1: Контент (Content) */}
             <AccordionItem value="content">
-              <AccordionTrigger className="text-base font-semibold">
+              {/* AICODE-NOTE: Sprint 3.1 - Blue accent for Content section */}
+              <AccordionTrigger className="text-base font-semibold text-blue-600 dark:text-blue-400">
                 {ru.inputForm.sections.content}
               </AccordionTrigger>
-              <AccordionContent className="space-y-4 pt-4">
+              <AccordionContent className="space-y-2 pt-3">
 
                 {/* AICODE-NOTE: T100 - "Название статьи" field (replaces old "Тема") */}
-                <div className="space-y-2">
+                <div className="space-y-1.5">
                   <Label htmlFor="title">
                     {ru.inputForm.title.label}
                     {/* AICODE-NOTE: T085 - Required field indicator (asterisk) */}
@@ -104,7 +131,7 @@ export function InputForm({ onSubmit, isLoading, currentProfile }: InputFormProp
                 </div>
 
                 {/* AICODE-NOTE: T101 - "Ключевые тезисы" field (optional, multiline) */}
-                <div className="space-y-2">
+                <div className="space-y-1.5">
                   <Label htmlFor="keyPoints">
                     {ru.inputForm.keyPoints.label}
                     {/* AICODE-NOTE: No asterisk - this field is optional */}
@@ -128,10 +155,11 @@ export function InputForm({ onSubmit, isLoading, currentProfile }: InputFormProp
 
             {/* AICODE-NOTE: T103 - Section 2: Стиль (Style Profile) */}
             <AccordionItem value="style">
-              <AccordionTrigger className="text-base font-semibold">
+              {/* AICODE-NOTE: Sprint 3.1 - Green accent for Style section */}
+              <AccordionTrigger className="text-base font-semibold text-green-600 dark:text-green-400">
                 {ru.inputForm.sections.style}
               </AccordionTrigger>
-              <AccordionContent className="pt-4">
+              <AccordionContent className="pt-3">
                 {/* AICODE-NOTE: T103 - StyleProfileSection manages profile state internally
                     It doesn't receive currentProfile as prop - it loads from /api/profiles/current
                     The onProfileUpdate callback is currently not used but kept for future integration */}
@@ -146,10 +174,11 @@ export function InputForm({ onSubmit, isLoading, currentProfile }: InputFormProp
 
             {/* AICODE-NOTE: T103 - Section 3: Настройки (Settings) */}
             <AccordionItem value="settings">
-              <AccordionTrigger className="text-base font-semibold">
+              {/* AICODE-NOTE: Sprint 3.1 - Purple accent for Settings section */}
+              <AccordionTrigger className="text-base font-semibold text-purple-600 dark:text-purple-400">
                 {ru.inputForm.sections.settings}
               </AccordionTrigger>
-              <AccordionContent className="pt-4">
+              <AccordionContent className="pt-3">
 
                 {/* Research Checkbox */}
                 <div className="flex items-center space-x-2">
