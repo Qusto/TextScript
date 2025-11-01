@@ -1030,3 +1030,130 @@ Both can work simultaneously - no file conflicts.
 | WCAG compliance | Partial | AA | **Accessible** |
 
 ---
+
+## Phase 13: Text-Based Profile Creation (Priority: P1) 🎯 Feature Enhancement
+
+**Goal**: Allow users to create style profiles by pasting text directly instead of URLs only
+
+**User Request** (2025-11-01):
+1. Current: Profile creation requires URLs (1-10 URLs, fetches HTML, parses content)
+2. New: Add ability to paste author's text directly (skip URL fetching/parsing)
+3. Auto-detection: System should transparently detect whether input is URLs or text
+4. User-provided names: Allow custom profile names instead of auto-generated only
+
+**Root Causes:**
+- Current API only accepts `source_urls: List[HttpUrl]` (Pydantic validation requires valid URLs)
+- Profile creation always calls `_extract_style_from_urls()` which requires URL fetching
+- No path for direct text → style analysis without subprocess
+- Profile names auto-generated from domain, no user input
+
+**Agent**: `python-backend-developer` (T192-T199), `frontend-developer` (T200-T202)
+
+### Sprint 1: Backend - Content Type Detection & Text Analysis (Week 1)
+
+**Purpose**: Smart detection of URLs vs text, direct LLM style analysis for text input
+
+**Agent**: `python-backend-developer`
+
+- [ ] T192 [P] Add `source_type` VARCHAR(10) column to StyleProfileDB model in backend/src/db/models.py: values "urls" or "text", DEFAULT "urls", add index
+- [ ] T193 [P] Create Alembic migration in backend/src/db/: `ALTER TABLE style_profiles ADD COLUMN source_type VARCHAR(10) DEFAULT 'urls' NOT NULL; CREATE INDEX ix_style_profiles_source_type ON style_profiles(source_type);`
+- [ ] T194 Create detect_content_type() function in backend/src/api/profiles.py: analyze list of strings, return "urls" if >50% lines start with http://, otherwise "text"
+- [ ] T195 Create _analyze_style_from_text() async function in backend/src/api/profiles.py: accepts text string, calls LLMClient.analyze_style() directly (no subprocess), returns profile_text
+- [ ] T196 Update ProfileCreateRequest model in backend/src/api/profiles.py: replace `source_urls: List[HttpUrl]` with `source_content: List[str]`, add `profile_name: str | None = None`
+- [ ] T197 Update generate_profile_name() in backend/src/api/profiles.py: add parameters `source_type`, `custom_name`, implement priority logic (custom → URL domain → first 7 words of text)
+- [ ] T198 Update create_profile() endpoint in backend/src/api/profiles.py: add branching logic - if URLs: call _extract_style_from_urls(), if text: call _analyze_style_from_text()
+- [ ] T199 Update ProfileResponse model in backend/src/api/profiles.py: add `source_type: str` field for frontend display
+
+**Checkpoint**: ✅ Backend supports both URL and text profile creation with auto-detection
+
+---
+
+### Sprint 2: Frontend - Profile Name Input & Unified Text Field (Week 1)
+
+**Purpose**: Add custom name input, update UI to accept URLs or text
+
+**Agent**: `frontend-developer`
+
+- [ ] T200 Add profile name input field in web-frontend/src/components/style-profile-section.tsx: Input component above source content, placeholder "Мой уникальный стиль", optional field with hint "Оставьте пустым для автоматического названия"
+- [ ] T201 Update source content field in style-profile-section.tsx: change label "URL источников" → "URL или текст источников", update placeholder to show both URL and text examples, increase rows to 8
+- [ ] T202 Update handleCreateProfile() in style-profile-section.tsx: send both `source_content` array and `profile_name` string to POST /api/profiles
+
+**Checkpoint**: ✅ Users can paste URLs or text, provide custom names
+
+---
+
+### Sprint 3: Testing & Documentation (Week 1-2)
+
+**Purpose**: Validate both flows work, update documentation
+
+**Agent**: `general-purpose`
+
+- [ ] T203 [P] Write unit tests for detect_content_type(): test URLs only, text only, mixed input, edge cases (empty, single line)
+- [ ] T204 [P] Write unit tests for _analyze_style_from_text(): test success, error handling, content length limits
+- [ ] T205 [P] Write unit tests for generate_profile_name(): test custom name priority, URL extraction, text truncation
+- [ ] T206 Run backend tests: poetry run pytest backend/tests/test_profiles.py
+- [ ] T207 Test profile creation from URLs: verify existing flow still works (regression test)
+- [ ] T208 Test profile creation from text: paste article text, verify profile created with correct source_type
+- [ ] T209 Test profile creation with custom name: verify user-provided name used instead of auto-generated
+- [ ] T210 Test mixed input: paste URLs + text, verify detection logic works correctly
+- [ ] T211 Test duplicate detection: create text profile twice with same text, verify hash collision detected
+- [ ] T212 Update specs/002-web-frontend-docker/spec.md: add user story for text-based profile creation
+- [ ] T213 Update quickstart.md: document text input option, show examples
+- [ ] T214 Add AICODE comments in profiles.py: explain detection logic, text analysis flow, naming priority
+
+**Checkpoint**: ✅ All flows tested and documented, ready for production
+
+---
+
+## Dependencies for Phase 13
+
+- **T192-T193**: Database migration - must complete first (creates source_type column)
+- **T194-T199**: Backend logic - depends on T192-T193, can run in parallel among themselves
+- **T200-T202**: Frontend updates - can run in parallel with backend (T194-T199)
+- **T203-T214**: Testing & docs - depends on all backend + frontend tasks
+
+### Parallel Opportunities
+
+**Sprint 1 + Sprint 2 can run in parallel**:
+- `python-backend-developer`: T192-T199 (backend detection + analysis)
+- `frontend-developer`: T200-T202 (UI updates)
+
+Both can work simultaneously on different files.
+
+**Sprint 3 sequential**:
+- Testing depends on implementation completion
+- Documentation can run in parallel with testing
+
+**Estimated time**: ~10-12 hours total (Sprint 1: 4-5h, Sprint 2: 2-3h, Sprint 3: 4h)
+
+---
+
+## Expected Outcomes for Phase 13
+
+### Before (Current State):
+- ❌ Profile creation: URLs only (1-10 URLs required)
+- ❌ HTML fetching: Always required (adds latency)
+- ❌ Profile names: Auto-generated from domain only
+- ❌ Text input: Not supported
+
+### After (Phase 13 Complete):
+- ✅ Profile creation: URLs OR text (auto-detected)
+- ✅ HTML fetching: Only for URLs (text skips this step)
+- ✅ Profile names: User-provided OR auto-generated
+- ✅ Text input: Fully supported with direct LLM analysis
+- ✅ Transparent UX: Single textarea accepts both types
+
+### Use Cases:
+1. **URL-based** (existing): Paste URLs → fetch HTML → analyze style
+2. **Text-based** (new): Paste article text → analyze style directly (faster, no network dependency)
+3. **Custom names**: "Мой деловой стиль", "Профиль для блога" instead of "Профиль Habr"
+
+### Metrics:
+| Metric | Before | After | Improvement |
+|--------|--------|-------|-------------|
+| Input types supported | 1 (URLs) | 2 (URLs + Text) | **+100%** |
+| Profile creation speed (text) | N/A | ~3-5s | **Faster than URLs** |
+| Network dependency | Always | Optional | **More reliable** |
+| Name customization | None | Full | **Better UX** |
+
+---
