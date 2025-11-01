@@ -1055,14 +1055,14 @@ Both can work simultaneously - no file conflicts.
 
 **Agent**: `python-backend-developer`
 
-- [ ] T192 [P] Add `source_type` VARCHAR(10) column to StyleProfileDB model in backend/src/db/models.py: values "urls" or "text", DEFAULT "urls", add index
-- [ ] T193 [P] Create Alembic migration in backend/src/db/: `ALTER TABLE style_profiles ADD COLUMN source_type VARCHAR(10) DEFAULT 'urls' NOT NULL; CREATE INDEX ix_style_profiles_source_type ON style_profiles(source_type);`
-- [ ] T194 Create detect_content_type() function in backend/src/api/profiles.py: analyze list of strings, return "urls" if >50% lines start with http://, otherwise "text"
-- [ ] T195 Create _analyze_style_from_text() async function in backend/src/api/profiles.py: accepts text string, calls LLMClient.analyze_style() directly (no subprocess), returns profile_text
-- [ ] T196 Update ProfileCreateRequest model in backend/src/api/profiles.py: replace `source_urls: List[HttpUrl]` with `source_content: List[str]`, add `profile_name: str | None = None`
-- [ ] T197 Update generate_profile_name() in backend/src/api/profiles.py: add parameters `source_type`, `custom_name`, implement priority logic (custom → URL domain → first 7 words of text)
-- [ ] T198 Update create_profile() endpoint in backend/src/api/profiles.py: add branching logic - if URLs: call _extract_style_from_urls(), if text: call _analyze_style_from_text()
-- [ ] T199 Update ProfileResponse model in backend/src/api/profiles.py: add `source_type: str` field for frontend display
+- [X] T192 [P] Add `source_type` VARCHAR(10) column to StyleProfileDB model in backend/src/db/models.py: values "urls" or "text", DEFAULT "urls", add index
+- [X] T193 [P] Create Alembic migration in backend/src/db/: `ALTER TABLE style_profiles ADD COLUMN source_type VARCHAR(10) DEFAULT 'urls' NOT NULL; CREATE INDEX ix_style_profiles_source_type ON style_profiles(source_type);`
+- [X] T194 Create detect_content_type() function in backend/src/api/profiles.py: analyze list of strings, return "urls" if >50% lines start with http://, otherwise "text"
+- [X] T195 Create _analyze_style_from_text() async function in backend/src/api/profiles.py: accepts text string, calls LLMClient.analyze_style() directly (no subprocess), returns profile_text
+- [X] T196 Update ProfileCreateRequest model in backend/src/api/profiles.py: replace `source_urls: List[HttpUrl]` with `source_content: List[str]`, add `profile_name: str | None = None`
+- [X] T197 Update generate_profile_name() in backend/src/api/profiles.py: add parameters `source_type`, `custom_name`, implement priority logic (custom → URL domain → first 7 words of text)
+- [X] T198 Update create_profile() endpoint in backend/src/api/profiles.py: add branching logic - if URLs: call _extract_style_from_urls(), if text: call _analyze_style_from_text()
+- [X] T199 Update ProfileResponse model in backend/src/api/profiles.py: add `source_type: str` field for frontend display
 
 **Checkpoint**: ✅ Backend supports both URL and text profile creation with auto-detection
 
@@ -1074,11 +1074,11 @@ Both can work simultaneously - no file conflicts.
 
 **Agent**: `frontend-developer`
 
-- [ ] T200 Add profile name input field in web-frontend/src/components/style-profile-section.tsx: Input component above source content, placeholder "Мой уникальный стиль", optional field with hint "Оставьте пустым для автоматического названия"
-- [ ] T201 Update source content field in style-profile-section.tsx: change label "URL источников" → "URL или текст источников", update placeholder to show both URL and text examples, increase rows to 8
-- [ ] T202 Update handleCreateProfile() in style-profile-section.tsx: send both `source_content` array and `profile_name` string to POST /api/profiles
+- [X] T200 Add profile name input field in web-frontend/src/components/style-profile-section.tsx: Input component above source content, placeholder "Мой уникальный стиль", optional field with hint "Оставьте пустым для автоматического названия"
+- [X] T201 Update source content field in style-profile-section.tsx: change label "URL источников" → "URL или текст источников", update placeholder to show both URL and text examples, increase rows to 8
+- [X] T202 Update handleCreateProfile() in style-profile-section.tsx: send both `source_content` array and `profile_name` string to POST /api/profiles
 
-**Checkpoint**: ✅ Users can paste URLs or text, provide custom names
+**Checkpoint**: ✅ Users can paste URLs or text, provide custom names (Completed 2025-11-01)
 
 ---
 
