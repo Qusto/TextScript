@@ -43,6 +43,15 @@ class StyleProfileDB(Base):
     # AICODE-NOTE: Primary key - auto-increment integer
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
 
+    # AICODE-NOTE: T119 - Human-readable profile name (e.g. "Профиль Habr")
+    # Generated from first source URL domain, used for UI display
+    name = Column(
+        String(100),
+        nullable=False,
+        default="Профиль",
+        comment="Human-readable profile name (e.g. 'Профиль Habr')",
+    )
+
     # AICODE-NOTE: Unique hash of source URLs (MD5 from generate_url_hash in style_cache.py)
     # Used to check if profile already exists for given URL set
     urls_hash = Column(
@@ -68,6 +77,19 @@ class StyleProfileDB(Base):
         JSON,
         nullable=False,
         comment="JSON array of original URLs used for style extraction",
+    )
+
+    # AICODE-NOTE: T192 - Source type for Phase 13 text-based profile creation
+    # Indicates whether profile was created from URLs or direct text input
+    # Values: "urls" (URL-based extraction) or "text" (direct text analysis)
+    # Default "urls" ensures backward compatibility with existing profiles
+    source_type = Column(
+        String(10),
+        nullable=False,
+        default="urls",
+        server_default="urls",
+        index=True,
+        comment="Source type: 'urls' or 'text' (Phase 13)",
     )
 
     # AICODE-NOTE: Timestamps for auditing and cache invalidation
@@ -102,6 +124,8 @@ class StyleProfileDB(Base):
         Convert model to dictionary for API responses.
 
         AICODE-NOTE: T087 - Serialization for FastAPI JSON responses
+        AICODE-NOTE: T119 - Added 'name' field to response
+        AICODE-NOTE: T199 - Added 'source_type' field for Phase 13
         Converts SQLAlchemy model to dict for API endpoints.
 
         Returns:
@@ -109,9 +133,11 @@ class StyleProfileDB(Base):
         """
         return {
             "id": self.id,
+            "name": self.name,  # AICODE-NOTE: T119 - Include profile name in API response
             "urls_hash": self.urls_hash,
             "profile_text": self.profile_text,
             "source_urls": self.source_urls,
+            "source_type": self.source_type,  # AICODE-NOTE: T199 - Include source type for frontend
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }
