@@ -21,7 +21,13 @@ import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { StyleProfile } from '@/types/profile'
 
 interface StyleProfileSectionProps {
@@ -49,14 +55,19 @@ export default function StyleProfileSection({ onProfileUpdate }: StyleProfileSec
   const [sourceUrls, setSourceUrls] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
 
+  // AICODE-NOTE: Phase 11 - Profile selection state
+  const [allProfiles, setAllProfiles] = useState<StyleProfile[]>([])
+  const [selectedProfileId, setSelectedProfileId] = useState<number | null>(null)
+
   /**
-   * Load current profile status on mount.
+   * Load current profile status and all profiles on mount.
    *
    * AICODE-NOTE: T097 - GET /api/profiles/current on component mount
-   * Returns StyleProfile if exists, null otherwise
+   * Phase 11 - Also load all profiles for selection dropdown
    */
   useEffect(() => {
     loadProfileStatus()
+    loadAllProfiles()
   }, [])
 
   const loadProfileStatus = async () => {
@@ -64,7 +75,8 @@ export default function StyleProfileSection({ onProfileUpdate }: StyleProfileSec
       setIsLoading(true)
       setError(null)
 
-      const response = await fetch('/api/profiles/current')
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+      const response = await fetch(`${apiUrl}/api/profiles/current`)
 
       // AICODE-NOTE: Sprint 3.1 - Distinguish between API errors and missing profile
       // Only show red error for actual failures (network, 500s)
@@ -91,6 +103,99 @@ export default function StyleProfileSection({ onProfileUpdate }: StyleProfileSec
   }
 
   /**
+   * Load all available profiles for selection dropdown.
+   *
+   * AICODE-NOTE: Phase 11 - GET /api/profiles for profile list
+   * Populates dropdown with all saved style profiles
+   */
+  const loadAllProfiles = async () => {
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+      const response = await fetch(`${apiUrl}/api/profiles`)
+
+      if (!response.ok) {
+        console.error('Failed to load profiles list')
+        return
+      }
+
+      const data = await response.json()
+      setAllProfiles(data)
+
+      // Set current profile as selected if it exists
+      if (profile && data.length > 0) {
+        setSelectedProfileId(profile.id)
+      }
+    } catch (err) {
+      console.error('Failed to load profiles list:', err)
+    }
+  }
+
+  /**
+   * Handle profile selection from dropdown.
+   *
+   * AICODE-NOTE: Phase 11 - Load selected profile and notify parent
+   */
+  const handleProfileSelect = async (profileId: number) => {
+    try {
+      setSelectedProfileId(profileId)
+      setError(null)
+
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+      const response = await fetch(`${apiUrl}/api/profiles/${profileId}`)
+
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`)
+      }
+
+      const selectedProfile = await response.json()
+      setProfile(selectedProfile)
+      setIsCreating(false)
+
+      // Notify parent component about profile selection
+      onProfileUpdate(selectedProfile)
+    } catch (err) {
+      console.error('Failed to load selected profile:', err)
+      setError('Ошибка загрузки выбранного профиля')
+    }
+  }
+
+  /**
+   * Delete selected profile from database.
+   *
+   * AICODE-NOTE: Phase 11 - DELETE /api/profiles/{id} from dropdown
+   * Removes profile and refreshes list
+   */
+  const handleDeleteProfile = async (profileId: number | null) => {
+    if (!profileId) return
+
+    try {
+      setIsSubmitting(true)
+      setError(null)
+
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+      const response = await fetch(`${apiUrl}/api/profiles/${profileId}`, {
+        method: 'DELETE',
+      })
+
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`)
+      }
+
+      // Reload profiles list and current profile
+      await loadAllProfiles()
+      await loadProfileStatus()
+
+      // Notify parent component about profile deletion
+      onProfileUpdate(null)
+    } catch (err) {
+      console.error('Failed to delete profile:', err)
+      setError('Ошибка удаления профиля')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  /**
    * Create new style profile from URLs.
    *
    * AICODE-NOTE: T099 - POST /api/profiles with source_urls array
@@ -112,7 +217,8 @@ export default function StyleProfileSection({ onProfileUpdate }: StyleProfileSec
       setIsSubmitting(true)
       setError(null)
 
-      const response = await fetch('/api/profiles', {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+      const response = await fetch(`${apiUrl}/api/profiles`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -131,6 +237,9 @@ export default function StyleProfileSection({ onProfileUpdate }: StyleProfileSec
       setProfile(newProfile)
       setIsCreating(false)
       setSourceUrls('')
+
+      // AICODE-NOTE: Phase 11 - Reload profiles list after creation
+      await loadAllProfiles()
 
       // AICODE-NOTE: Notify parent component about profile creation
       onProfileUpdate(newProfile)
@@ -155,7 +264,8 @@ export default function StyleProfileSection({ onProfileUpdate }: StyleProfileSec
       setIsSubmitting(true)
       setError(null)
 
-      const response = await fetch(`/api/profiles/${profile.id}`, {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+      const response = await fetch(`${apiUrl}/api/profiles/${profile.id}`, {
         method: 'DELETE',
       })
 
@@ -180,43 +290,90 @@ export default function StyleProfileSection({ onProfileUpdate }: StyleProfileSec
   // AICODE-NOTE: Loading state
   if (isLoading) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Профиль стиля</CardTitle>
-          <CardDescription>Загрузка...</CardDescription>
-        </CardHeader>
-      </Card>
+      <div className="space-y-2">
+        <h3 className="text-sm font-semibold">Профиль стиля</h3>
+        <p className="text-sm text-muted-foreground">Загрузка...</p>
+      </div>
     )
   }
 
   return (
-    <div className="space-y-4">
-      {/* AICODE-NOTE: T097 - Profile status display */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Профиль стиля</CardTitle>
-          <CardDescription>
-            {profile ? (
-              <>
-                <span className="text-green-600 dark:text-green-400">✓ Профиль загружен</span>
-                <span className="text-muted-foreground ml-2">
-                  ({profile.source_urls.length} URL{profile.source_urls.length > 1 ? 'ов' : ''})
-                </span>
-              </>
-            ) : (
-              // AICODE-NOTE: Sprint 3.1 - Friendly empty state instead of warning
-              // Guides user to create profile without negative framing
-              <span className="text-blue-600 dark:text-blue-400">→ Создайте профиль стиля для начала работы</span>
-            )}
-          </CardDescription>
-        </CardHeader>
+    <div className="space-y-3">
+      {/* AICODE-NOTE: T097 - Profile status display (removed Card wrapper for consistency) */}
+      {/* AICODE-NOTE: Sprint 4 - Matches AccordionContent styling (no white card) */}
+      <div className="space-y-2">
+        <h3 className="text-sm font-semibold">Профиль стиля</h3>
+        <p className="text-sm">
+          {profile ? (
+            <>
+              {/* AICODE-NOTE: T126 - Display profile.name instead of generic text */}
+              <span className="text-green-600 dark:text-green-400">✓ {profile.name}</span>
+              <span className="text-muted-foreground ml-2">
+                ({profile.source_urls.length} URL{profile.source_urls.length > 1 ? 'ов' : ''})
+              </span>
+            </>
+          ) : (
+            // AICODE-NOTE: T130 - Changed from "для начала работы" to "(опционально)"
+            <span className="text-blue-600 dark:text-blue-400">→ Профиль стиля (опционально)</span>
+          )}
+        </p>
+      </div>
 
-        <CardContent className="space-y-3">
+      <div className="space-y-3">
           {/* AICODE-NOTE: Error display */}
           {error && (
             <Alert variant="destructive">
               <AlertDescription>{error}</AlertDescription>
             </Alert>
+          )}
+
+          {/* AICODE-NOTE: Phase 11 - Profile selection dropdown (when multiple profiles exist) */}
+          {allProfiles.length > 1 && (
+            <div className="space-y-2">
+              <label htmlFor="profile-select" className="text-sm font-medium">
+                Выбор профиля стиля
+              </label>
+              <div className="flex gap-2">
+                <Select
+                  value={selectedProfileId?.toString() || ''}
+                  onValueChange={(value) => handleProfileSelect(Number(value))}
+                >
+                  <SelectTrigger id="profile-select" className="flex-1">
+                    <SelectValue placeholder="Выберите профиль" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {allProfiles.map((p) => (
+                      <SelectItem key={p.id} value={p.id.toString()}>
+                        {p.name} ({p.source_urls.length} URL{p.source_urls.length > 1 ? 'ов' : ''})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => handleDeleteProfile(selectedProfileId)}
+                  disabled={!selectedProfileId || isSubmitting}
+                  title="Удалить профиль"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M3 6h18" />
+                    <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                    <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                  </svg>
+                </Button>
+              </div>
+            </div>
           )}
 
           {/* AICODE-NOTE: T098 - View Profile button (only when profile exists) */}
@@ -244,23 +401,21 @@ export default function StyleProfileSection({ onProfileUpdate }: StyleProfileSec
 
           {/* AICODE-NOTE: T098 - Profile viewer (shows profile_text) */}
           {profile && isViewerOpen && (
-            <Card className="bg-muted/50">
-              <CardContent className="pt-4">
-                <pre className="text-sm whitespace-pre-wrap font-mono">
-                  {profile.profile_text}
-                </pre>
-                <div className="mt-4 text-xs text-muted-foreground">
-                  <p>Источники:</p>
-                  <ul className="list-disc list-inside mt-1">
-                    {profile.source_urls.map((url, index) => (
-                      <li key={index} className="truncate">
-                        {url}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </CardContent>
-            </Card>
+            <div className="bg-muted/50 rounded-md p-4">
+              <pre className="text-sm whitespace-pre-wrap font-mono">
+                {profile.profile_text}
+              </pre>
+              <div className="mt-4 text-xs text-muted-foreground">
+                <p>Источники:</p>
+                <ul className="list-disc list-inside mt-1">
+                  {profile.source_urls.map((url, index) => (
+                    <li key={index} className="truncate">
+                      {url}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
           )}
 
           {/* AICODE-NOTE: T099 - Profile creation form (visible when no profile or updating) */}
@@ -292,8 +447,7 @@ export default function StyleProfileSection({ onProfileUpdate }: StyleProfileSec
               </Button>
             </div>
           )}
-        </CardContent>
-      </Card>
+      </div>
     </div>
   )
 }
