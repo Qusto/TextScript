@@ -21,20 +21,22 @@ import { Textarea } from '@/components/ui/textarea'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
-import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { StyleProfile } from '@/types/profile'
 import StyleProfileSection from './style-profile-section'
 import { ru } from '@/lib/i18n'
 
 // AICODE-NOTE: T102 - Updated props interface for Phase 10
+// AICODE-NOTE: T131 - currentProfile no longer used for validation (profile is optional)
+// AICODE-NOTE: Phase 11.2 - Added wordCount parameter for article length control
 interface InputFormProps {
-  onSubmit: (data: { title: string; keyPoints?: string; enableResearch: boolean }) => void
+  onSubmit: (data: { title: string; keyPoints?: string; enableResearch: boolean; wordCount: number }) => void
   isLoading: boolean
   currentProfile: StyleProfile | null
+  onProfileUpdate?: (profile: StyleProfile | null) => void
 }
 
-export function InputForm({ onSubmit, isLoading, currentProfile }: InputFormProps) {
+export function InputForm({ onSubmit, isLoading, onProfileUpdate }: InputFormProps) {
   // AICODE-NOTE: T100 - State renamed from "topic" to "title"
   const [title, setTitle] = useState('')
 
@@ -43,14 +45,18 @@ export function InputForm({ onSubmit, isLoading, currentProfile }: InputFormProp
 
   const [enableResearch, setEnableResearch] = useState(false)
 
+  // AICODE-NOTE: Phase 11.2 - Word count control for article length (default: 500 words)
+  const [wordCount, setWordCount] = useState(500)
+
   // AICODE-NOTE: Sprint 3.1 - Track current accordion section for progress stepper
   const [currentSection, setCurrentSection] = useState<string>('content')
 
   // AICODE-NOTE: T110 - Form valid only when profile exists AND title is not empty
-  // This ensures user cannot generate article without creating style profile first
-  const isFormValid = currentProfile !== null && title.trim() !== ''
+  // AICODE-NOTE: T131 - Removed profile dependency, now only checks title
+  const isFormValid = title.trim() !== ''
 
   // AICODE-NOTE: T102 - Updated onSubmit handler with new data structure
+  // AICODE-NOTE: Phase 11.2 - Added wordCount to submission data
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -63,6 +69,7 @@ export function InputForm({ onSubmit, isLoading, currentProfile }: InputFormProp
       // AICODE-NOTE: T101 - keyPoints is optional: undefined if empty, otherwise trimmed value
       keyPoints: keyPoints.trim() || undefined,
       enableResearch,
+      wordCount,  // Phase 11.2 - Article length in words
     })
   }
 
@@ -74,20 +81,22 @@ export function InputForm({ onSubmit, isLoading, currentProfile }: InputFormProp
           Укажите детали для генерации статьи в вашем стиле
         </CardDescription>
       </CardHeader>
-      <CardContent className="p-4">
-        <form onSubmit={handleSubmit} className="space-y-4">
+      <CardContent className="p-3">
+        <form onSubmit={handleSubmit} className="space-y-3">
           {/* AICODE-NOTE: Sprint 3.1 - Progress stepper shows workflow: Content → Style → Settings
               Helps users understand the 3-step process and current position */}
-          <div className="flex items-center justify-center gap-2 mb-4 text-sm">
-            <span className={`font-medium transition-colors ${currentSection === 'content' ? 'text-blue-600 dark:text-blue-400' : 'text-muted-foreground'}`}>
+          {/* AICODE-NOTE: T168 - Compact stepper: text-sm → text-xs, mb-4 → mb-2, gap-2 → gap-1 (saves ~15px) */}
+          {/* AICODE-NOTE: T179 - Strengthened active step with font-semibold for better contrast */}
+          <div className="flex items-center justify-center gap-1 mb-2 text-xs">
+            <span className={`transition-colors ${currentSection === 'content' ? 'font-semibold text-blue-600 dark:text-blue-400' : 'font-medium text-muted-foreground'}`}>
               Шаг 1: Контент
             </span>
             <span className="text-muted-foreground">→</span>
-            <span className={`font-medium transition-colors ${currentSection === 'style' ? 'text-green-600 dark:text-green-400' : 'text-muted-foreground'}`}>
+            <span className={`transition-colors ${currentSection === 'style' ? 'font-semibold text-green-600 dark:text-green-400' : 'font-medium text-muted-foreground'}`}>
               Шаг 2: Стиль
             </span>
             <span className="text-muted-foreground">→</span>
-            <span className={`font-medium transition-colors ${currentSection === 'settings' ? 'text-purple-600 dark:text-purple-400' : 'text-muted-foreground'}`}>
+            <span className={`transition-colors ${currentSection === 'settings' ? 'font-semibold text-purple-600 dark:text-purple-400' : 'font-medium text-muted-foreground'}`}>
               Шаг 3: Настройки
             </span>
           </div>
@@ -104,12 +113,16 @@ export function InputForm({ onSubmit, isLoading, currentProfile }: InputFormProp
           >
 
             {/* AICODE-NOTE: T103 - Section 1: Контент (Content) */}
-            <AccordionItem value="content">
+            {/* AICODE-NOTE: T173 - Added left border accent for visual hierarchy */}
+            {/* AICODE-NOTE: T182 - Added bottom border divider between sections */}
+            <AccordionItem value="content" className="border-l-4 border-blue-500 pl-3 border-b border-border">
               {/* AICODE-NOTE: Sprint 3.1 - Blue accent for Content section */}
               <AccordionTrigger className="text-base font-semibold text-blue-600 dark:text-blue-400">
                 {ru.inputForm.sections.content}
               </AccordionTrigger>
-              <AccordionContent className="space-y-2 pt-3">
+              {/* AICODE-NOTE: T169 - Reduced padding: pt-3 → pt-2, space-y-2 → space-y-1.5 */}
+              {/* AICODE-NOTE: T174 - Added subtle background for visual distinction */}
+              <AccordionContent className="space-y-1.5 pt-2 bg-blue-50 dark:bg-blue-950/20 rounded-md p-2">
 
                 {/* AICODE-NOTE: T100 - "Название статьи" field (replaces old "Тема") */}
                 <div className="space-y-1.5">
@@ -118,6 +131,7 @@ export function InputForm({ onSubmit, isLoading, currentProfile }: InputFormProp
                     {/* AICODE-NOTE: T085 - Required field indicator (asterisk) */}
                     <span className="text-destructive ml-1">*</span>
                   </Label>
+                  {/* AICODE-NOTE: T170 - Optimized height: min-h-[44px] → h-10 (saves ~4px) */}
                   <Input
                     id="title"
                     type="text"
@@ -125,7 +139,7 @@ export function InputForm({ onSubmit, isLoading, currentProfile }: InputFormProp
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                     disabled={isLoading}
-                    className="min-h-[44px]"
+                    className="h-10"
                     required
                   />
                 </div>
@@ -136,13 +150,14 @@ export function InputForm({ onSubmit, isLoading, currentProfile }: InputFormProp
                     {ru.inputForm.keyPoints.label}
                     {/* AICODE-NOTE: No asterisk - this field is optional */}
                   </Label>
+                  {/* AICODE-NOTE: T171 - Reduced rows: 6 → 4 (saves ~40px) */}
                   <Textarea
                     id="keyPoints"
                     placeholder={ru.inputForm.keyPoints.placeholder}
                     value={keyPoints}
                     onChange={(e) => setKeyPoints(e.target.value)}
                     disabled={isLoading}
-                    rows={6}
+                    rows={4}
                     className="resize-none"
                   />
                   <p className="text-xs text-muted-foreground">
@@ -154,31 +169,58 @@ export function InputForm({ onSubmit, isLoading, currentProfile }: InputFormProp
             </AccordionItem>
 
             {/* AICODE-NOTE: T103 - Section 2: Стиль (Style Profile) */}
-            <AccordionItem value="style">
+            {/* AICODE-NOTE: T175 - Added left border accent for visual hierarchy */}
+            {/* AICODE-NOTE: T182 - Added bottom border divider between sections */}
+            <AccordionItem value="style" className="border-l-4 border-green-500 pl-3 border-b border-border">
               {/* AICODE-NOTE: Sprint 3.1 - Green accent for Style section */}
               <AccordionTrigger className="text-base font-semibold text-green-600 dark:text-green-400">
                 {ru.inputForm.sections.style}
               </AccordionTrigger>
-              <AccordionContent className="pt-3">
-                {/* AICODE-NOTE: T103 - StyleProfileSection manages profile state internally
-                    It doesn't receive currentProfile as prop - it loads from /api/profiles/current
-                    The onProfileUpdate callback is currently not used but kept for future integration */}
+              {/* AICODE-NOTE: T169 - Reduced padding: pt-3 → pt-2 */}
+              {/* AICODE-NOTE: T176 - Added subtle background for visual distinction */}
+              <AccordionContent className="pt-2 bg-green-50 dark:bg-green-950/20 rounded-md p-2">
+                {/* AICODE-NOTE: T110 - StyleProfileSection notifies parent of profile changes
+                    Parent (page.tsx) uses this to enable/disable generation button */}
                 <StyleProfileSection onProfileUpdate={(profile) => {
-                  // AICODE-TODO: T111 - Integrate profile updates with parent component
-                  // Currently InputForm receives currentProfile as prop from parent (page.tsx)
-                  // Future: Make InputForm manage profile state internally
-                  console.log('Profile updated:', profile)
+                  if (onProfileUpdate) {
+                    onProfileUpdate(profile)
+                  }
                 }} />
               </AccordionContent>
             </AccordionItem>
 
             {/* AICODE-NOTE: T103 - Section 3: Настройки (Settings) */}
-            <AccordionItem value="settings">
+            {/* AICODE-NOTE: T177 - Added left border accent for visual hierarchy */}
+            {/* AICODE-NOTE: T182 - Added bottom border divider (last section, no bottom border needed but keeping for consistency) */}
+            <AccordionItem value="settings" className="border-l-4 border-purple-500 pl-3">
               {/* AICODE-NOTE: Sprint 3.1 - Purple accent for Settings section */}
               <AccordionTrigger className="text-base font-semibold text-purple-600 dark:text-purple-400">
                 {ru.inputForm.sections.settings}
               </AccordionTrigger>
-              <AccordionContent className="pt-3">
+              {/* AICODE-NOTE: T169 - Reduced padding: pt-3 → pt-2, space-y-4 → space-y-3 */}
+              {/* AICODE-NOTE: T178 - Added subtle background for visual distinction */}
+              <AccordionContent className="pt-2 space-y-3 bg-purple-50 dark:bg-purple-950/20 rounded-md p-2">
+
+                {/* AICODE-NOTE: Phase 11.2 - Word count input for article length control */}
+                <div className="space-y-1.5">
+                  <Label htmlFor="wordCount">
+                    Размер статьи (слов) <span className="text-destructive">*</span>
+                  </Label>
+                  <Input
+                    id="wordCount"
+                    type="number"
+                    placeholder="500"
+                    value={wordCount}
+                    onChange={(e) => setWordCount(Math.max(100, Math.min(5000, Number(e.target.value) || 500)))}
+                    disabled={isLoading}
+                    min={100}
+                    max={5000}
+                    step={100}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Укажите желаемый размер статьи от 100 до 5000 слов (±10-20% точность)
+                  </p>
+                </div>
 
                 {/* Research Checkbox */}
                 <div className="flex items-center space-x-2">
@@ -201,25 +243,20 @@ export function InputForm({ onSubmit, isLoading, currentProfile }: InputFormProp
 
           </Accordion>
 
-          {/* AICODE-NOTE: T110 - Warning when no profile loaded
-              Shows alert to guide user to create profile in "Стиль" section */}
-          {!currentProfile && (
-            <Alert className="border-yellow-500 bg-yellow-50 dark:bg-yellow-950/20">
-              <AlertDescription className="text-yellow-800 dark:text-yellow-200">
-                {ru.inputForm.warnings.noProfile}
-              </AlertDescription>
-            </Alert>
-          )}
+          {/* AICODE-NOTE: T131 - Removed profile dependency warning
+              Profile is now optional, so no warning needed */}
 
           {/* Submit Button */}
-          {/* AICODE-NOTE: T110 - Button disabled when:
-              1. No profile loaded (currentProfile === null)
-              2. Title is empty (title.trim() === '')
-              3. Generation in progress (isLoading === true) */}
+          {/* AICODE-NOTE: T131 - Button disabled when:
+              1. Title is empty (title.trim() === '')
+              2. Generation in progress (isLoading === true)
+              Profile is now optional, so no longer checked */}
+          {/* AICODE-NOTE: T172 - Reduced button height: min-h-[44px] → h-10 (saves ~4px) */}
+          {/* AICODE-NOTE: T180 - Added gradient for high visual impact and better contrast */}
           <Button
             type="submit"
             disabled={!isFormValid || isLoading}
-            className="w-full min-h-[44px]"
+            className="w-full h-10 font-semibold bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
           >
             {isLoading ? ru.inputForm.button.submitting : ru.inputForm.button.submit}
           </Button>
