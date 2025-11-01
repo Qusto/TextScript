@@ -75,8 +75,8 @@ export function InputForm({ onSubmit, isLoading, onProfileUpdate }: InputFormPro
   }
 
   return (
-    {/* AICODE-NOTE: T188 - Increased border-radius for modern look: rounded-lg → rounded-xl */}
-    {/* AICODE-NOTE: T189 - Added shadow for depth: shadow-sm → shadow-lg */}
+    // AICODE-NOTE: T188 - Increased border-radius for modern look: rounded-lg → rounded-xl
+    // AICODE-NOTE: T189 - Added shadow for depth: shadow-sm → shadow-lg
     <Card className="w-full rounded-xl shadow-lg">
       <CardHeader>
         <CardTitle>{ru.inputForm.formTitle}</CardTitle>
