@@ -26,6 +26,7 @@ const mockProfile: StyleProfile = {
   source_urls: ['https://example.com/article1', 'https://example.com/article2'],
   created_at: '2025-10-29T00:00:00Z',
   updated_at: '2025-10-29T00:00:00Z',
+  name: 'Example Profile', // AICODE-NOTE: T125 - Added name field for display
 }
 
 describe('StyleProfileSection', () => {
@@ -46,33 +47,51 @@ describe('StyleProfileSection', () => {
 
     it('shows "not loaded" status when no profile exists', async () => {
       // AICODE-NOTE: GET /api/profiles/current returns null when no profile
-      ;(fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        json: async () => null,
-      })
+      // Phase 13 - Also need to mock /api/profiles call
+      ;(fetch as jest.Mock)
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => null,
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => [],
+        })
 
       render(<StyleProfileSection onProfileUpdate={() => {}} />)
 
       await waitFor(() => {
-        expect(screen.getByText(/профиль не загружен/i)).toBeInTheDocument()
+        expect(screen.getByText(/профиль стиля \(опционально\)/i)).toBeInTheDocument()
       })
     })
 
     it('shows "loaded" status when profile exists', async () => {
-      ;(fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        json: async () => mockProfile,
-      })
+      // AICODE-NOTE: Phase 13 - Mock both /api/profiles/current and /api/profiles
+      ;(fetch as jest.Mock)
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => mockProfile,
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => [mockProfile],
+        })
 
       render(<StyleProfileSection onProfileUpdate={() => {}} />)
 
       await waitFor(() => {
-        expect(screen.getByText(/профиль загружен/i)).toBeInTheDocument()
+        expect(screen.getByText(/✓ Example Profile/i)).toBeInTheDocument()
       })
     })
 
     it('shows error state on API failure', async () => {
-      ;(fetch as jest.Mock).mockRejectedValueOnce(new Error('Network error'))
+      // AICODE-NOTE: Phase 13 - Mock failed /api/profiles/current call
+      ;(fetch as jest.Mock)
+        .mockRejectedValueOnce(new Error('Network error'))
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => [],
+        })
 
       render(<StyleProfileSection onProfileUpdate={() => {}} />)
 
@@ -84,10 +103,16 @@ describe('StyleProfileSection', () => {
 
   describe('Profile Viewer Dialog (T098)', () => {
     it('shows "View Profile" button when profile loaded', async () => {
-      ;(fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        json: async () => mockProfile,
-      })
+      // AICODE-NOTE: Phase 13 - Mock both API calls
+      ;(fetch as jest.Mock)
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => mockProfile,
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => [mockProfile],
+        })
 
       render(<StyleProfileSection onProfileUpdate={() => {}} />)
 
@@ -97,10 +122,16 @@ describe('StyleProfileSection', () => {
     })
 
     it('opens dialog and displays profile text when "View Profile" clicked', async () => {
-      ;(fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        json: async () => mockProfile,
-      })
+      // AICODE-NOTE: Phase 13 - Mock both API calls
+      ;(fetch as jest.Mock)
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => mockProfile,
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => [mockProfile],
+        })
 
       const user = userEvent.setup()
       render(<StyleProfileSection onProfileUpdate={() => {}} />)
@@ -119,10 +150,16 @@ describe('StyleProfileSection', () => {
     })
 
     it('hides "View Profile" button when no profile loaded', async () => {
-      ;(fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        json: async () => null,
-      })
+      // AICODE-NOTE: Phase 13 - Mock both API calls
+      ;(fetch as jest.Mock)
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => null,
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => [],
+        })
 
       render(<StyleProfileSection onProfileUpdate={() => {}} />)
 
@@ -136,37 +173,7 @@ describe('StyleProfileSection', () => {
 
   describe('Profile Update Form (T099)', () => {
     it('shows URL input form when no profile exists', async () => {
-      ;(fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        json: async () => null,
-      })
-
-      render(<StyleProfileSection onProfileUpdate={() => {}} />)
-
-      await waitFor(() => {
-        expect(
-          screen.getByPlaceholderText(/введите url/i)
-        ).toBeInTheDocument()
-      })
-    })
-
-    it('hides URL input when profile exists (collapsible)', async () => {
-      ;(fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        json: async () => mockProfile,
-      })
-
-      render(<StyleProfileSection onProfileUpdate={() => {}} />)
-
-      await waitFor(() => {
-        expect(
-          screen.queryByPlaceholderText(/введите url/i)
-        ).not.toBeInTheDocument()
-      })
-    })
-
-    it('creates new profile when form submitted', async () => {
-      // AICODE-NOTE: First call returns null (no profile), second returns created profile
+      // AICODE-NOTE: Phase 13 - Mock both API calls
       ;(fetch as jest.Mock)
         .mockResolvedValueOnce({
           ok: true,
@@ -174,7 +181,59 @@ describe('StyleProfileSection', () => {
         })
         .mockResolvedValueOnce({
           ok: true,
+          json: async () => [],
+        })
+
+      render(<StyleProfileSection onProfileUpdate={() => {}} />)
+
+      await waitFor(() => {
+        // AICODE-NOTE: Phase 13 T201 - New placeholder supports URLs or text
+        expect(
+          screen.getByPlaceholderText(/https:\/\/example\.com\/article1/i)
+        ).toBeInTheDocument()
+      })
+    })
+
+    it('hides URL input when profile exists (collapsible)', async () => {
+      // AICODE-NOTE: Phase 13 - Mock both API calls
+      ;(fetch as jest.Mock)
+        .mockResolvedValueOnce({
+          ok: true,
           json: async () => mockProfile,
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => [mockProfile],
+        })
+
+      render(<StyleProfileSection onProfileUpdate={() => {}} />)
+
+      await waitFor(() => {
+        // AICODE-NOTE: Phase 13 T201 - Check for new placeholder
+        expect(
+          screen.queryByPlaceholderText(/https:\/\/example\.com\/article1/i)
+        ).not.toBeInTheDocument()
+      })
+    })
+
+    it('creates new profile when form submitted', async () => {
+      // AICODE-NOTE: Phase 13 - Mock: current profile, all profiles, POST response, reload profiles
+      ;(fetch as jest.Mock)
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => null, // GET /api/profiles/current
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => [], // GET /api/profiles
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => mockProfile, // POST /api/profiles
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => [mockProfile], // GET /api/profiles (reload after create)
         })
 
       const onProfileUpdate = jest.fn()
@@ -183,30 +242,31 @@ describe('StyleProfileSection', () => {
 
       await waitFor(() => {
         expect(
-          screen.getByPlaceholderText(/введите url/i)
+          screen.getByPlaceholderText(/https:\/\/example\.com\/article1/i)
         ).toBeInTheDocument()
       })
 
-      const urlInput = screen.getByPlaceholderText(/введите url/i)
+      const urlInput = screen.getByPlaceholderText(/https:\/\/example\.com\/article1/i)
       const submitButton = screen.getByText(/создать профиль/i)
 
-      // AICODE-NOTE: Enter URLs (one per line)
+      // AICODE-NOTE: Phase 13 T201 - Enter URLs (textarea now supports URLs or text)
       await user.type(
         urlInput,
-        'https://example.com/article1\nhttps://example.com/article2'
+        'https://example.com/article1{Enter}https://example.com/article2'
       )
       await user.click(submitButton)
 
-      // AICODE-NOTE: Verify POST request to /api/profiles
+      // AICODE-NOTE: Phase 13 T202 - Verify POST with source_content and profile_name
       await waitFor(() => {
-        expect(fetch).toHaveBeenCalledWith('/api/profiles', {
+        expect(fetch).toHaveBeenCalledWith('http://localhost:8000/api/profiles', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            source_urls: [
+            source_content: [
               'https://example.com/article1',
               'https://example.com/article2',
             ],
+            profile_name: null, // No custom name provided
           }),
         })
       })
@@ -218,10 +278,16 @@ describe('StyleProfileSection', () => {
     })
 
     it('validates URL input (requires at least 1 URL)', async () => {
-      ;(fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        json: async () => null,
-      })
+      // AICODE-NOTE: Phase 13 - Mock both API calls
+      ;(fetch as jest.Mock)
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => null,
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => [],
+        })
 
       render(<StyleProfileSection onProfileUpdate={() => {}} />)
 
@@ -238,10 +304,16 @@ describe('StyleProfileSection', () => {
 
   describe('Profile Update Button (T099)', () => {
     it('shows "Update Profile" button when profile loaded', async () => {
-      ;(fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        json: async () => mockProfile,
-      })
+      // AICODE-NOTE: Phase 13 - Mock both API calls
+      ;(fetch as jest.Mock)
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => mockProfile,
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => [mockProfile],
+        })
 
       render(<StyleProfileSection onProfileUpdate={() => {}} />)
 
@@ -251,14 +323,19 @@ describe('StyleProfileSection', () => {
     })
 
     it('deletes existing profile and shows create form when "Update" clicked', async () => {
+      // AICODE-NOTE: Phase 13 - Mock: load current, load all, DELETE response
       ;(fetch as jest.Mock)
         .mockResolvedValueOnce({
           ok: true,
-          json: async () => mockProfile,
+          json: async () => mockProfile, // GET /api/profiles/current
         })
         .mockResolvedValueOnce({
           ok: true,
-          json: async () => ({ success: true }),
+          json: async () => [mockProfile], // GET /api/profiles
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ success: true }), // DELETE /api/profiles/1
         })
 
       const onProfileUpdate = jest.fn()
@@ -272,9 +349,9 @@ describe('StyleProfileSection', () => {
       const updateButton = screen.getByText(/обновить профиль/i)
       await user.click(updateButton)
 
-      // AICODE-NOTE: Verify DELETE request to /api/profiles/{id}
+      // AICODE-NOTE: Phase 13 - Verify DELETE request with full URL
       await waitFor(() => {
-        expect(fetch).toHaveBeenCalledWith('/api/profiles/1', {
+        expect(fetch).toHaveBeenCalledWith('http://localhost:8000/api/profiles/1', {
           method: 'DELETE',
         })
       })
@@ -284,10 +361,10 @@ describe('StyleProfileSection', () => {
         expect(onProfileUpdate).toHaveBeenCalledWith(null)
       })
 
-      // AICODE-NOTE: Create form should now be visible
+      // AICODE-NOTE: Phase 13 T201 - Create form with new placeholder
       await waitFor(() => {
         expect(
-          screen.getByPlaceholderText(/введите url/i)
+          screen.getByPlaceholderText(/https:\/\/example\.com\/article1/i)
         ).toBeInTheDocument()
       })
     })

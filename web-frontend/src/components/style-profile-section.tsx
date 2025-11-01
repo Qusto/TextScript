@@ -19,6 +19,7 @@
 
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import {
@@ -53,6 +54,7 @@ export default function StyleProfileSection({ onProfileUpdate }: StyleProfileSec
   // AICODE-NOTE: T099 - Profile creation form state
   const [isCreating, setIsCreating] = useState(false)
   const [sourceUrls, setSourceUrls] = useState('')
+  const [profileName, setProfileName] = useState('') // AICODE-NOTE: Phase 13 T200 - Custom profile name
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   // AICODE-NOTE: Phase 11 - Profile selection state
@@ -196,20 +198,22 @@ export default function StyleProfileSection({ onProfileUpdate }: StyleProfileSec
   }
 
   /**
-   * Create new style profile from URLs.
+   * Create new style profile from URLs or text.
    *
    * AICODE-NOTE: T099 - POST /api/profiles with source_urls array
+   * Phase 13 T202 - Now supports both URLs and text via source_content
    * Calls backend style extraction (src/ugly_script.py) and saves to DB
    */
   const handleCreateProfile = async () => {
-    // AICODE-NOTE: Parse URLs from textarea (one per line)
-    const urls = sourceUrls
+    // AICODE-NOTE: Phase 13 T202 - Parse lines from textarea (URLs or text)
+    // Backend auto-detects content type transparently
+    const lines = sourceUrls
       .split('\n')
-      .map(url => url.trim())
-      .filter(url => url.length > 0)
+      .map(line => line.trim())
+      .filter(line => line.length > 0)
 
-    if (urls.length === 0) {
-      setError('Введите хотя бы один URL')
+    if (lines.length === 0) {
+      setError('Введите URL или текст для анализа стиля')
       return
     }
 
@@ -218,13 +222,18 @@ export default function StyleProfileSection({ onProfileUpdate }: StyleProfileSec
       setError(null)
 
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+
+      // AICODE-NOTE: Phase 13 T202 - Send source_content and profile_name
+      // Backend auto-detects if content is URLs or text (transparent to user)
+      // profile_name is optional - backend generates name if not provided
       const response = await fetch(`${apiUrl}/api/profiles`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          source_urls: urls,
+          source_content: lines,
+          profile_name: profileName || null,
         }),
       })
 
@@ -237,6 +246,7 @@ export default function StyleProfileSection({ onProfileUpdate }: StyleProfileSec
       setProfile(newProfile)
       setIsCreating(false)
       setSourceUrls('')
+      setProfileName('') // AICODE-NOTE: Phase 13 T202 - Clear profile name input
 
       // AICODE-NOTE: Phase 11 - Reload profiles list after creation
       await loadAllProfiles()
@@ -276,6 +286,8 @@ export default function StyleProfileSection({ onProfileUpdate }: StyleProfileSec
       // AICODE-NOTE: Clear profile and show create form
       setProfile(null)
       setIsCreating(true)
+      setSourceUrls('')
+      setProfileName('') // AICODE-NOTE: Phase 13 - Reset profile name when updating
 
       // AICODE-NOTE: Notify parent component about profile deletion
       onProfileUpdate(null)
@@ -421,20 +433,40 @@ export default function StyleProfileSection({ onProfileUpdate }: StyleProfileSec
           {/* AICODE-NOTE: T099 - Profile creation form (visible when no profile or updating) */}
           {isCreating && (
             <div className="space-y-3">
+              {/* AICODE-NOTE: Phase 13 T200 - Custom profile name input (optional) */}
               <div>
-                <label htmlFor="source-urls" className="text-sm font-medium mb-1 block">
-                  URL источников (по одному на строку)
+                <label htmlFor="profile-name" className="text-sm font-medium mb-1 block">
+                  Название профиля (опционально)
                 </label>
-                <Textarea
-                  id="source-urls"
-                  placeholder="https://example.com/article1&#10;https://example.com/article2"
-                  value={sourceUrls}
-                  onChange={(e) => setSourceUrls(e.target.value)}
-                  rows={4}
+                <Input
+                  id="profile-name"
+                  placeholder="Мой уникальный стиль"
+                  value={profileName}
+                  onChange={(e) => setProfileName(e.target.value)}
                   disabled={isSubmitting}
                 />
                 <p className="text-xs text-muted-foreground mt-1">
-                  Введите 1-10 URL статей для анализа стиля
+                  Оставьте пустым для автоматического названия
+                </p>
+              </div>
+
+              {/* AICODE-NOTE: Phase 13 T201 - Unified input field for URLs or text
+                  Backend auto-detects content type (URLs vs text) transparently.
+                  User can paste either format - no manual selection needed. */}
+              <div>
+                <label htmlFor="source-urls" className="text-sm font-medium mb-1 block">
+                  URL или текст источников
+                </label>
+                <Textarea
+                  id="source-urls"
+                  placeholder="https://example.com/article1&#10;https://example.com/article2&#10;&#10;или просто текст для анализа стиля:&#10;Это пример авторского текста.&#10;Можно вставить статью или несколько абзацев..."
+                  value={sourceUrls}
+                  onChange={(e) => setSourceUrls(e.target.value)}
+                  rows={8}
+                  disabled={isSubmitting}
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Вставьте URL (по одному на строку) или просто текст для анализа стиля
                 </p>
               </div>
 
