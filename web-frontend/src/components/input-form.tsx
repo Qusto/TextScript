@@ -25,6 +25,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { StyleProfile } from '@/types/profile'
 import StyleProfileSection from './style-profile-section'
 import { ru } from '@/lib/i18n'
+import { FileText, Palette, Settings } from 'lucide-react'
 
 // AICODE-NOTE: T102 - Updated props interface for Phase 10
 // AICODE-NOTE: T131 - currentProfile no longer used for validation (profile is optional)
@@ -74,7 +75,9 @@ export function InputForm({ onSubmit, isLoading, onProfileUpdate }: InputFormPro
   }
 
   return (
-    <Card className="w-full">
+    {/* AICODE-NOTE: T188 - Increased border-radius for modern look: rounded-lg → rounded-xl */}
+    {/* AICODE-NOTE: T189 - Added shadow for depth: shadow-sm → shadow-lg */}
+    <Card className="w-full rounded-xl shadow-lg">
       <CardHeader>
         <CardTitle>{ru.inputForm.formTitle}</CardTitle>
         <CardDescription>
@@ -117,8 +120,12 @@ export function InputForm({ onSubmit, isLoading, onProfileUpdate }: InputFormPro
             {/* AICODE-NOTE: T182 - Added bottom border divider between sections */}
             <AccordionItem value="content" className="border-l-4 border-blue-500 pl-3 border-b border-border">
               {/* AICODE-NOTE: Sprint 3.1 - Blue accent for Content section */}
+              {/* AICODE-NOTE: T186 - Added FileText icon for better visual identification */}
               <AccordionTrigger className="text-base font-semibold text-blue-600 dark:text-blue-400">
-                {ru.inputForm.sections.content}
+                <div className="flex items-center gap-2">
+                  <FileText className="h-4 w-4" />
+                  <span>{ru.inputForm.sections.content}</span>
+                </div>
               </AccordionTrigger>
               {/* AICODE-NOTE: T169 - Reduced padding: pt-3 → pt-2, space-y-2 → space-y-1.5 */}
               {/* AICODE-NOTE: T174 - Added subtle background for visual distinction */}
@@ -173,8 +180,12 @@ export function InputForm({ onSubmit, isLoading, onProfileUpdate }: InputFormPro
             {/* AICODE-NOTE: T182 - Added bottom border divider between sections */}
             <AccordionItem value="style" className="border-l-4 border-green-500 pl-3 border-b border-border">
               {/* AICODE-NOTE: Sprint 3.1 - Green accent for Style section */}
+              {/* AICODE-NOTE: T186 - Added Palette icon for better visual identification */}
               <AccordionTrigger className="text-base font-semibold text-green-600 dark:text-green-400">
-                {ru.inputForm.sections.style}
+                <div className="flex items-center gap-2">
+                  <Palette className="h-4 w-4" />
+                  <span>{ru.inputForm.sections.style}</span>
+                </div>
               </AccordionTrigger>
               {/* AICODE-NOTE: T169 - Reduced padding: pt-3 → pt-2 */}
               {/* AICODE-NOTE: T176 - Added subtle background for visual distinction */}
@@ -194,8 +205,12 @@ export function InputForm({ onSubmit, isLoading, onProfileUpdate }: InputFormPro
             {/* AICODE-NOTE: T182 - Added bottom border divider (last section, no bottom border needed but keeping for consistency) */}
             <AccordionItem value="settings" className="border-l-4 border-purple-500 pl-3">
               {/* AICODE-NOTE: Sprint 3.1 - Purple accent for Settings section */}
+              {/* AICODE-NOTE: T186 - Added Settings icon for better visual identification */}
               <AccordionTrigger className="text-base font-semibold text-purple-600 dark:text-purple-400">
-                {ru.inputForm.sections.settings}
+                <div className="flex items-center gap-2">
+                  <Settings className="h-4 w-4" />
+                  <span>{ru.inputForm.sections.settings}</span>
+                </div>
               </AccordionTrigger>
               {/* AICODE-NOTE: T169 - Reduced padding: pt-3 → pt-2, space-y-4 → space-y-3 */}
               {/* AICODE-NOTE: T178 - Added subtle background for visual distinction */}

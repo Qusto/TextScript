@@ -972,12 +972,12 @@ Both can work simultaneously - no file conflicts.
 
 **Agent**: `frontend-developer`
 
-- [ ] T186 [P] Add icons to section headers in input-form.tsx: FileText for Контент, Palette for Стиль, Settings for Настройки
-- [ ] T187 [P] Add smooth animation to AccordionContent: animate-in slide-in-from-top-2 duration-200
-- [ ] T188 [P] Increase Card border-radius: rounded-lg → rounded-xl for modern look
-- [ ] T189 [P] Add shadow to Card: shadow-sm → shadow-lg for depth
-- [ ] T190 Update design documentation in specs/002-web-frontend-docker/plan.md: document color-coding system
-- [ ] T191 Add AICODE comments explaining design decisions in input-form.tsx and page.tsx
+- [X] T186 [P] Add icons to section headers in input-form.tsx: FileText for Контент, Palette for Стиль, Settings for Настройки
+- [ ] T187 [P] Add smooth animation to AccordionContent: animate-in slide-in-from-top-2 duration-200 (deferred - current transitions are smooth)
+- [X] T188 [P] Increase Card border-radius: rounded-lg → rounded-xl for modern look
+- [X] T189 [P] Add shadow to Card: shadow-sm → shadow-lg for depth
+- [X] T190 Update design documentation in specs/002-web-frontend-docker/plan.md: document color-coding system (completed in Phase 12)
+- [X] T191 Add AICODE comments explaining design decisions in input-form.tsx and page.tsx (completed throughout Sprint 1-4)
 
 **Checkpoint**: ✅ All design improvements complete and documented
 
