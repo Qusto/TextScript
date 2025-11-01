@@ -43,12 +43,13 @@ class ResearchClient:
         )
         self.prompt_manager = PromptManager()
 
-    def research(self, topic: str, style_hints: StyleHints) -> ResearchResult:
+    def research(self, topic: str, style_hints: StyleHints | None = None) -> ResearchResult:
         """Perform research on topic guided by style hints.
 
         Args:
             topic: Research topic/question
-            style_hints: Author's content preferences to guide research
+            style_hints: Author's content preferences to guide research (optional)
+                        If None, uses generic research approach
 
         Returns:
             ResearchResult with facts, quotes, and full research text
@@ -57,11 +58,24 @@ class ResearchClient:
             Exception: If API call fails
         """
         logger.info(f"Researching topic: '{topic}'")
-        logger.debug(
-            f"Style hints: depth={style_hints.content_depth}, "
-            f"tech={style_hints.technical_level}, "
-            f"sources={style_hints.preferred_sources}"
-        )
+
+        # Use default style hints if not provided
+        if style_hints is None:
+            logger.debug("No style hints provided - using generic research parameters")
+            content_depth = "medium depth with balanced coverage"
+            technical_level = "general audience with clear explanations"
+            preferred_sources = "reputable sources, academic studies, expert opinions"
+            focus_areas = "key facts, statistics, expert insights"
+        else:
+            logger.debug(
+                f"Style hints: depth={style_hints.content_depth}, "
+                f"tech={style_hints.technical_level}, "
+                f"sources={style_hints.preferred_sources}"
+            )
+            content_depth = style_hints.content_depth
+            technical_level = style_hints.technical_level
+            preferred_sources = style_hints.preferred_sources
+            focus_areas = ", ".join(style_hints.focus_areas)
 
         # Load prompt template
         prompt_template = self.prompt_manager.load_prompt(
@@ -69,13 +83,13 @@ class ResearchClient:
             default=self._get_default_prompt(),
         )
 
-        # Render prompt with topic and style hints
+        # Render prompt with topic and style hints (or defaults)
         prompt = prompt_template.format(
             topic=topic,
-            content_depth=style_hints.content_depth,
-            technical_level=style_hints.technical_level,
-            preferred_sources=style_hints.preferred_sources,
-            focus_areas=", ".join(style_hints.focus_areas),
+            content_depth=content_depth,
+            technical_level=technical_level,
+            preferred_sources=preferred_sources,
+            focus_areas=focus_areas,
         )
 
         # Call LLM with research model

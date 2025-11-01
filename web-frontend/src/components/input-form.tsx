@@ -118,7 +118,7 @@ export function InputForm({ onSubmit, isLoading, onProfileUpdate }: InputFormPro
             {/* AICODE-NOTE: T103 - Section 1: Контент (Content) */}
             {/* AICODE-NOTE: T173 - Added left border accent for visual hierarchy */}
             {/* AICODE-NOTE: T182 - Added bottom border divider between sections */}
-            <AccordionItem value="content" className="border-l-4 border-blue-500 pl-3 border-b border-border">
+            <AccordionItem value="content" className="border-l-4 border-blue-500 pl-3 pr-1 border-b border-border mb-2">
               {/* AICODE-NOTE: Sprint 3.1 - Blue accent for Content section */}
               {/* AICODE-NOTE: T186 - Added FileText icon for better visual identification */}
               <AccordionTrigger className="text-base font-semibold text-blue-600 dark:text-blue-400">
@@ -178,7 +178,7 @@ export function InputForm({ onSubmit, isLoading, onProfileUpdate }: InputFormPro
             {/* AICODE-NOTE: T103 - Section 2: Стиль (Style Profile) */}
             {/* AICODE-NOTE: T175 - Added left border accent for visual hierarchy */}
             {/* AICODE-NOTE: T182 - Added bottom border divider between sections */}
-            <AccordionItem value="style" className="border-l-4 border-green-500 pl-3 border-b border-border">
+            <AccordionItem value="style" className="border-l-4 border-green-500 pl-3 pr-1 border-b border-border mb-2">
               {/* AICODE-NOTE: Sprint 3.1 - Green accent for Style section */}
               {/* AICODE-NOTE: T186 - Added Palette icon for better visual identification */}
               <AccordionTrigger className="text-base font-semibold text-green-600 dark:text-green-400">
@@ -203,7 +203,7 @@ export function InputForm({ onSubmit, isLoading, onProfileUpdate }: InputFormPro
             {/* AICODE-NOTE: T103 - Section 3: Настройки (Settings) */}
             {/* AICODE-NOTE: T177 - Added left border accent for visual hierarchy */}
             {/* AICODE-NOTE: T182 - Added bottom border divider (last section, no bottom border needed but keeping for consistency) */}
-            <AccordionItem value="settings" className="border-l-4 border-purple-500 pl-3">
+            <AccordionItem value="settings" className="border-l-4 border-purple-500 pl-3 pr-1 mb-2">
               {/* AICODE-NOTE: Sprint 3.1 - Purple accent for Settings section */}
               {/* AICODE-NOTE: T186 - Added Settings icon for better visual identification */}
               <AccordionTrigger className="text-base font-semibold text-purple-600 dark:text-purple-400">

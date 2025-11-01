@@ -1,7 +1,19 @@
 """Main entry point for the style article generator."""
 
+import os
 import sys
 from pathlib import Path
+
+# AICODE-NOTE: Fix sys.path for Docker environment where script is run from /src/
+# When running /src/ugly_script.py, Python adds /src to sys.path[0], which breaks
+# 'from src.X' imports. Insert '/' early in sys.path to ensure src package is found.
+if sys.path[0] == str(Path(__file__).parent):
+    # Script is being run from /src directory, insert / right after
+    sys.path.insert(1, '/')
+elif '/' not in sys.path[:3]:
+    # Fallback: ensure / is in first 3 positions
+    sys.path.insert(0, '/')
+
 from loguru import logger
 
 from src.config import load_config
@@ -132,6 +144,29 @@ def fetch_and_extract_content(
     return collection
 
 
+def load_profile_from_env() -> str | None:
+    """
+    Load style profile from STYLE_PROFILE_TEXT environment variable.
+
+    AICODE-NOTE: T139 - Load profile for V2 API generation mode.
+    Returns None for free-style generation, or profile text for styled generation.
+
+    Returns:
+        str | None: Profile text or None for free-style
+    """
+    profile_text = os.getenv('STYLE_PROFILE_TEXT', '').strip()
+
+    if profile_text:
+        # AICODE-NOTE: Log profile length, not full content (best practice)
+        logger.info(f"✓ Loaded style profile from environment ({len(profile_text)} chars)")
+        if len(profile_text) > 50:
+            logger.debug(f"  Profile preview: {profile_text[:50]}...")
+        return profile_text
+    else:
+        logger.info("✓ No style profile provided - using free-style generation")
+        return None
+
+
 def main():
     """Main entry point for style article generator."""
     configure_logging()
@@ -139,71 +174,152 @@ def main():
     logger.info("=== Style Article Generator ===")
     logger.info("")
 
+    # AICODE-NOTE: T138 - Parse command line arguments for V2 API mode
+    import argparse
+    parser = argparse.ArgumentParser(
+        description="Generate styled articles with AI"
+    )
+    parser.add_argument(
+        '--skip-style-analysis',
+        action='store_true',
+        help='Skip URL fetching and style analysis (use existing profile from env)'
+    )
+    parser.add_argument(
+        '--profile-from-env',
+        action='store_true',
+        help='Load style profile from STYLE_PROFILE_TEXT environment variable'
+    )
+    args = parser.parse_args()
+
     try:
         # Load configuration
         config = load_config()
         logger.success(f"✓ Configuration loaded (model: {config.model})")
 
-        # Read input files
-        urls, topic = read_input_files()
-        logger.success(f"✓ Loaded {len(urls)} URLs and topic: '{topic}'")
+        # AICODE-NOTE: T140 - Conditional logic based on mode
+        # MODE 1: Traditional style analysis from URLs (existing flow)
+        # MODE 2: Direct generation with pre-analyzed profile (V2 API)
 
-        # Fetch and extract content
-        collection = fetch_and_extract_content(urls, config)
+        if not args.skip_style_analysis:
+            # === MODE 1: Traditional style analysis ===
+            logger.info("Mode: Style analysis from URLs")
 
-        if collection.success_count == 0:
-            logger.error("✗ No content could be fetched from any URL")
-            sys.exit(1)
+            # Read input files
+            urls, topic = read_input_files()
+            logger.success(f"✓ Loaded {len(urls)} URLs and topic: '{topic}'")
 
-        # Initialize LLM client, cost tracker, and cache
-        client = LLMClient(api_key=config.api_key, model=config.model)
-        cost_tracker = CostTracker(client)
-        cache = StyleCache()
+            # Fetch and extract content
+            collection = fetch_and_extract_content(urls, config)
 
-        # Check cache for existing style profile
-        logger.info("")
-        cached_profile = cache.load_from_cache(urls)
+            if collection.success_count == 0:
+                logger.error("✗ No content could be fetched from any URL")
+                sys.exit(1)
 
-        if cached_profile:
-            logger.success("✓ Using cached style profile")
-            style_profile_text = cached_profile
-            is_cached = True
+            # Initialize LLM client, cost tracker, and cache
+            client = LLMClient(api_key=config.api_key, model=config.model)
+            cost_tracker = CostTracker(client)
+            cache = StyleCache()
+
+            # Check cache for existing style profile
+            logger.info("")
+            cached_profile = cache.load_from_cache(urls)
+
+            if cached_profile:
+                logger.success("✓ Using cached style profile")
+                style_profile_text = cached_profile
+                is_cached = True
+            else:
+                # Analyze writing style with LLM (tracked for cost)
+                logger.info("Analyzing writing style...")
+                style_profile_text = cost_tracker.analyze_style(collection.combined_content)
+                logger.success("✓ Style analysis complete")
+
+                # Save to cache
+                cache.save_to_cache(urls, style_profile_text)
+                logger.info("  Saved style profile to cache")
+                is_cached = False
+
+            # Create style profile object
+            url_hash = generate_url_hash(urls)
+            style_profile = StyleProfile(
+                profile_text=style_profile_text,
+                source_urls=urls,
+                url_hash=url_hash,
+                cached=is_cached,
+            )
+
         else:
-            # Analyze writing style with LLM (tracked for cost)
-            logger.info("Analyzing writing style...")
-            style_profile_text = cost_tracker.analyze_style(collection.combined_content)
-            logger.success("✓ Style analysis complete")
+            # === MODE 2: Direct generation with pre-analyzed profile ===
+            # AICODE-NOTE: T141 - V2 API mode: no URL fetching, profile from environment
+            logger.info("Mode: Direct generation (V2 API)")
 
-            # Save to cache
-            cache.save_to_cache(urls, style_profile_text)
-            logger.info("  Saved style profile to cache")
-            is_cached = False
+            # T141: Read only topic.txt (title) - validation required
+            topic_file = Path("topic.txt")
+            if not topic_file.exists():
+                logger.error("✗ topic.txt not found in current directory")
+                raise FileNotFoundError("topic.txt is required for direct generation mode")
 
-        # Create style profile object
-        url_hash = generate_url_hash(urls)
-        style_profile = StyleProfile(
-            profile_text=style_profile_text,
-            source_urls=urls,
-            url_hash=url_hash,
-            cached=is_cached,
-        )
+            topic = topic_file.read_text(encoding="utf-8").strip()
+
+            if not topic:
+                logger.error("✗ topic.txt is empty")
+                raise ValueError("topic.txt contains no topic")
+
+            logger.success(f"✓ Loaded topic: '{topic}'")
+
+            # T139: Load style profile from environment variable
+            if args.profile_from_env:
+                style_profile_text = load_profile_from_env()
+            else:
+                # No profile specified - free-style generation
+                logger.info("✓ No profile flag provided - using free-style generation")
+                style_profile_text = None
+
+            # Initialize LLM client for generation
+            # AICODE-NOTE: T124 - API key still required even for free-style
+            # (best practice: fail fast with clear error)
+            client = LLMClient(api_key=config.api_key, model=config.model)
+            cost_tracker = CostTracker(client)
+
+            # Create minimal style profile object (or None for free-style)
+            # AICODE-NOTE: T140 - Define url_hash for both styled and free-style modes
+            url_hash = "v2-api-free-style"  # Placeholder hash for V2 API
+
+            if style_profile_text:
+                url_hash = "v2-api-profile"  # Placeholder hash for V2 API with profile
+                style_profile = StyleProfile(
+                    profile_text=style_profile_text,
+                    source_urls=[],  # No source URLs in V2 API
+                    url_hash=url_hash,
+                    cached=False,
+                )
+            else:
+                # Free-style: no profile object needed
+                style_profile = None
 
         # Optional research stage (US7)
+        # AICODE-NOTE: Research can work both with and without style profile
+        # With profile: uses style hints for targeted research
+        # Without profile: uses generic research for the topic
         research_result = None
         if config.research_enabled:
             logger.info("")
             logger.info("=== Research Enhancement Stage ===")
 
-            # Extract style hints from profile
-            logger.info("Extracting style hints from profile...")
-            hints_extractor = StyleHintsExtractor(config, llm_client=cost_tracker)
-            style_hints = hints_extractor.extract(style_profile)
-            logger.success(
-                f"✓ Style hints extracted: {style_hints.content_depth}, "
-                f"{style_hints.technical_level}, {style_hints.preferred_sources}"
-            )
+            # Extract style hints from profile if available
+            style_hints = None
+            if style_profile:
+                logger.info("Extracting style hints from profile...")
+                hints_extractor = StyleHintsExtractor(config, llm_client=cost_tracker)
+                style_hints = hints_extractor.extract(style_profile)
+                logger.success(
+                    f"✓ Style hints extracted: {style_hints.content_depth}, "
+                    f"{style_hints.technical_level}, {style_hints.preferred_sources}"
+                )
+            else:
+                logger.info("No style profile - using generic research approach")
 
-            # Perform research
+            # Perform research (works with or without style hints)
             research_client = ResearchClient(config, llm_client=cost_tracker)
             research_result = research_client.research(topic, style_hints)
             logger.success(
@@ -215,6 +331,7 @@ def main():
             logger.info("Research stage disabled (RESEARCH_ENABLED=false)")
 
         # Generate article (with research if available)
+        # AICODE-NOTE: T140 - Support free-style generation (style_profile can be None)
         logger.info("")
         logger.info(f"Generating article about '{topic}'...")
 
@@ -249,10 +366,10 @@ Please integrate these facts, quotes, and findings naturally into the article.
 
             article_content = cost_tracker.generate(enhanced_prompt)
         else:
-            # Standard generation without research
-            article_content = cost_tracker.generate_article(
-                topic, style_profile.profile_text
-            )
+            # Standard generation (with or without profile)
+            # AICODE-NOTE: T140 - Pass None for free-style generation
+            profile_text = style_profile.profile_text if style_profile else None
+            article_content = cost_tracker.generate_article(topic, profile_text)
 
         logger.success("✓ Article generation complete")
 
