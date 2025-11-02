@@ -22,6 +22,7 @@ const mockProfile: StyleProfile = {
   source_urls: ['https://example.com'],
   created_at: '2025-10-29T00:00:00Z',
   updated_at: '2025-10-29T00:00:00Z',
+  name: 'Test Profile', // AICODE-NOTE: T125 - Added name field for display
 }
 
 describe('InputForm (Phase 10 - Updated)', () => {
@@ -65,12 +66,13 @@ describe('InputForm (Phase 10 - Updated)', () => {
       const submitButton = screen.getByText(/Сгенерировать/)
       await user.click(submitButton)
 
-      // AICODE-NOTE: Should submit even without keyPoints
+      // AICODE-NOTE: Should submit even without keyPoints (undefined when empty)
       await waitFor(() => {
         expect(onSubmit).toHaveBeenCalledWith({
           title: 'Test Article',
-          keyPoints: '',
+          keyPoints: undefined,  // Empty keyPoints becomes undefined in submission
           enableResearch: false,
+          wordCount: 500,  // Phase 11.2 - Default word count
         })
       })
     })
@@ -95,6 +97,7 @@ describe('InputForm (Phase 10 - Updated)', () => {
           title: 'Test Article',
           keyPoints: 'Point 1\nPoint 2',
           enableResearch: false,
+          wordCount: 500,  // Phase 11.2 - Default word count
         })
       })
     })
@@ -105,9 +108,10 @@ describe('InputForm (Phase 10 - Updated)', () => {
       render(<InputForm onSubmit={() => {}} isLoading={false} currentProfile={mockProfile} />)
 
       // AICODE-NOTE: T103 - Three sections defined
-      expect(screen.getByText(/Контент/)).toBeInTheDocument()
-      expect(screen.getByText(/Стиль/)).toBeInTheDocument()
-      expect(screen.getByText(/Настройки/)).toBeInTheDocument()
+      // All section names appear in both stepper and accordion, so check they exist
+      expect(screen.getAllByText(/Контент/).length).toBeGreaterThan(0)
+      expect(screen.getAllByText(/Стиль/).length).toBeGreaterThan(0)
+      expect(screen.getAllByText(/Настройки/).length).toBeGreaterThan(0)
     })
 
     it('Контент section contains title and keyPoints fields', () => {
@@ -118,41 +122,41 @@ describe('InputForm (Phase 10 - Updated)', () => {
       expect(screen.getByText(/Ключевые тезисы/)).toBeInTheDocument()
     })
 
-    it('Настройки section contains research checkbox', () => {
+    it('Настройки section contains research checkbox and word count', async () => {
+      const user = userEvent.setup()
       render(<InputForm onSubmit={() => {}} isLoading={false} currentProfile={mockProfile} />)
 
-      // AICODE-NOTE: Research checkbox in "Настройки"
-      expect(screen.getByText(/Включить режим исследования/)).toBeInTheDocument()
+      // AICODE-NOTE: Need to open Настройки accordion first (defaults to closed)
+      const settingsAccordion = screen.getAllByText(/Настройки/)[1]  // Get accordion trigger, not stepper
+      await user.click(settingsAccordion)
+
+      // AICODE-NOTE: Research checkbox and word count input in "Настройки"
+      await waitFor(() => {
+        expect(screen.getByText(/Включить режим исследования/)).toBeInTheDocument()
+      })
+      // Phase 11.2 - Word count field added
+      expect(screen.getByText(/Размер статьи/)).toBeInTheDocument()
     })
   })
 
-  describe('Profile Requirement (T110)', () => {
-    it('disables submit button when no profile loaded', () => {
+  describe('Profile Requirement (T110, T131 - Updated)', () => {
+    it('disables submit button when title is empty (regardless of profile)', () => {
       render(<InputForm onSubmit={() => {}} isLoading={false} currentProfile={null} />)
 
       const submitButton = screen.getByText(/Сгенерировать/)
 
-      // AICODE-NOTE: T110 - Button disabled when currentProfile is null
+      // AICODE-NOTE: T131 - Button disabled when title is empty (profile no longer required)
       expect(submitButton).toBeDisabled()
     })
 
-    it('shows warning message when no profile loaded', () => {
+    it('does NOT show warning message when no profile loaded', () => {
       render(<InputForm onSubmit={() => {}} isLoading={false} currentProfile={null} />)
 
-      // AICODE-NOTE: T110 - Warning message visible
-      expect(screen.getByText(/Сначала создайте профиль стиля/)).toBeInTheDocument()
+      // AICODE-NOTE: T131 - No warning message (profile is optional now)
+      expect(screen.queryByText(/Сначала создайте профиль стиля/)).not.toBeInTheDocument()
     })
 
-    it('enables submit button when profile is loaded', () => {
-      render(<InputForm onSubmit={() => {}} isLoading={false} currentProfile={mockProfile} />)
-
-      const submitButton = screen.getByText(/Сгенерировать/)
-
-      // AICODE-NOTE: Initially disabled (no title)
-      expect(submitButton).toBeDisabled()
-    })
-
-    it('enables submit when profile loaded and title provided', async () => {
+    it('enables submit button when title is provided (with profile)', async () => {
       const user = userEvent.setup()
       render(<InputForm onSubmit={() => {}} isLoading={false} currentProfile={mockProfile} />)
 
@@ -161,7 +165,20 @@ describe('InputForm (Phase 10 - Updated)', () => {
 
       const submitButton = screen.getByText(/Сгенерировать/)
 
-      // AICODE-NOTE: Now enabled (profile exists + title provided)
+      // AICODE-NOTE: T131 - Enabled when title provided (profile optional)
+      expect(submitButton).not.toBeDisabled()
+    })
+
+    it('enables submit when title provided even WITHOUT profile', async () => {
+      const user = userEvent.setup()
+      render(<InputForm onSubmit={() => {}} isLoading={false} currentProfile={null} />)
+
+      const titleInput = screen.getByPlaceholderText(/Введите название статьи/)
+      await user.type(titleInput, 'Test')
+
+      const submitButton = screen.getByText(/Сгенерировать/)
+
+      // AICODE-NOTE: T131 - Profile is now optional, button enabled with just title
       expect(submitButton).not.toBeDisabled()
     })
   })
@@ -179,7 +196,10 @@ describe('InputForm (Phase 10 - Updated)', () => {
 
       const titleInput = screen.getByPlaceholderText(/Введите название статьи/)
       const keyPointsInput = screen.getByPlaceholderText(/Тезис 1/)
-      const submitButton = screen.getByText(/Генерация.../)
+      // AICODE-NOTE: Use getAllByText because "Генерация..." appears in multiple buttons
+      // Get the last one which is the main submit button
+      const submitButtons = screen.getAllByText(/Генерация.../)
+      const submitButton = submitButtons[submitButtons.length - 1]
 
       expect(titleInput).toBeDisabled()
       expect(keyPointsInput).toBeDisabled()

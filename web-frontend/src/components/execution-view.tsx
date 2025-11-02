@@ -16,6 +16,55 @@ interface ExecutionViewProps {
   finalArticle: string | null
 }
 
+// AICODE-NOTE: Parse log line into structured format for colorized display
+interface ParsedLogLine {
+  timestamp: string
+  level: 'INFO' | 'SUCCESS' | 'WARNING' | 'ERROR' | 'DEBUG' | null
+  message: string
+  raw: string
+}
+
+function parseLogLine(line: string): ParsedLogLine {
+  // Format: "HH:MM:SS | LEVEL     | message"
+  const match = line.match(/^(\d{2}:\d{2}:\d{2})\s*\|\s*(\w+)\s*\|\s*(.+)$/)
+
+  if (match) {
+    const [, timestamp, level, message] = match
+    return {
+      timestamp,
+      level: level as ParsedLogLine['level'],
+      message: message.trim(),
+      raw: line
+    }
+  }
+
+  // Fallback for lines that don't match format
+  return {
+    timestamp: '',
+    level: null,
+    message: line,
+    raw: line
+  }
+}
+
+// AICODE-NOTE: Get color classes for log level
+function getLevelColor(level: ParsedLogLine['level']): string {
+  switch (level) {
+    case 'SUCCESS':
+      return 'text-green-600 dark:text-green-400'
+    case 'ERROR':
+      return 'text-red-600 dark:text-red-400'
+    case 'WARNING':
+      return 'text-yellow-600 dark:text-yellow-400'
+    case 'INFO':
+      return 'text-blue-600 dark:text-blue-400'
+    case 'DEBUG':
+      return 'text-gray-500 dark:text-gray-400'
+    default:
+      return 'text-foreground'
+  }
+}
+
 export function ExecutionView({ logLines, finalArticle }: ExecutionViewProps) {
   // AICODE-NOTE: T027 - Auto-scroll to bottom when new log lines are added
   const logEndRef = useRef<HTMLDivElement>(null)
@@ -78,9 +127,11 @@ export function ExecutionView({ logLines, finalArticle }: ExecutionViewProps) {
         <Tabs defaultValue="log" className="w-full">
           <TabsList className="grid w-full grid-cols-2">
             {/* AICODE-NOTE: T083 - Russian tab labels */}
-            <TabsTrigger value="log">{ru.executionView.tabs.log}</TabsTrigger>
+            {/* AICODE-NOTE: WCAG 2.5.5 AA - Minimum touch target 44x44px height (h-11) */}
+            <TabsTrigger value="log" className="h-11">{ru.executionView.tabs.log}</TabsTrigger>
             {/* AICODE-NOTE: T028 - Result tab disabled until finalArticle is set */}
-            <TabsTrigger value="result" disabled={!finalArticle}>
+            {/* AICODE-NOTE: WCAG 2.5.5 AA - Minimum touch target 44x44px height (h-11) */}
+            <TabsTrigger value="result" disabled={!finalArticle} className="h-11">
               {ru.executionView.tabs.result}
             </TabsTrigger>
           </TabsList>
@@ -95,11 +146,34 @@ export function ExecutionView({ logLines, finalArticle }: ExecutionViewProps) {
                 </p>
               ) : (
                 <pre className="text-xs font-mono whitespace-pre-wrap break-words">
-                  {logLines.map((line, index) => (
-                    <div key={index} className="py-0.5">
-                      {line}
-                    </div>
-                  ))}
+                  {logLines.map((line, index) => {
+                    const parsed = parseLogLine(line)
+
+                    return (
+                      <div key={index} className="py-0.5 flex gap-2">
+                        {/* Timestamp - muted gray */}
+                        {parsed.timestamp && (
+                          <span className="text-muted-foreground shrink-0">
+                            {parsed.timestamp}
+                          </span>
+                        )}
+
+                        {/* Level - colorized */}
+                        {parsed.level && (
+                          <>
+                            <span className="text-muted-foreground">|</span>
+                            <span className={`${getLevelColor(parsed.level)} font-semibold shrink-0 min-w-[60px]`}>
+                              {parsed.level}
+                            </span>
+                            <span className="text-muted-foreground">|</span>
+                          </>
+                        )}
+
+                        {/* Message - default color, supports emojis */}
+                        <span className="flex-1">{parsed.message}</span>
+                      </div>
+                    )
+                  })}
                   {/* AICODE-NOTE: Invisible div used for auto-scroll target */}
                   <div ref={logEndRef} />
                 </pre>

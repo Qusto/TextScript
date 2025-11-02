@@ -138,7 +138,7 @@ export function InputForm({ onSubmit, isLoading, onProfileUpdate }: InputFormPro
                     {/* AICODE-NOTE: T085 - Required field indicator (asterisk) */}
                     <span className="text-destructive ml-1">*</span>
                   </Label>
-                  {/* AICODE-NOTE: T170 - Optimized height: min-h-[44px] → h-10 (saves ~4px) */}
+                  {/* AICODE-NOTE: WCAG 2.5.5 AA - Minimum touch target 44x44px height (h-11) */}
                   <Input
                     id="title"
                     type="text"
@@ -146,7 +146,7 @@ export function InputForm({ onSubmit, isLoading, onProfileUpdate }: InputFormPro
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                     disabled={isLoading}
-                    className="h-10"
+                    className="h-11"
                     required
                   />
                 </div>
@@ -266,12 +266,12 @@ export function InputForm({ onSubmit, isLoading, onProfileUpdate }: InputFormPro
               1. Title is empty (title.trim() === '')
               2. Generation in progress (isLoading === true)
               Profile is now optional, so no longer checked */}
-          {/* AICODE-NOTE: T172 - Reduced button height: min-h-[44px] → h-10 (saves ~4px) */}
+          {/* AICODE-NOTE: WCAG 2.5.5 AA - Minimum touch target 44x44px height (h-11) */}
           {/* AICODE-NOTE: T180 - Added gradient for high visual impact and better contrast */}
           <Button
             type="submit"
             disabled={!isFormValid || isLoading}
-            className="w-full h-10 font-semibold bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+            className="w-full h-11 font-semibold bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
           >
             {isLoading ? ru.inputForm.button.submitting : ru.inputForm.button.submit}
           </Button>
