@@ -38,6 +38,10 @@ wheels/
 .coverage
 htmlcov/
 
+# QA Automation test reports
+test-reports/*
+!test-reports/README.md
+
 # Poetry
 poetry.lock
 
