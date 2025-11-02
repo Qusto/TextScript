@@ -133,7 +133,14 @@ export default function Home() {
     // AICODE-NOTE: T040 - Layout: single-column max-w-3xl container with dark zinc theme
     // Using min-h-screen for full viewport height and centered content
     <div className="min-h-screen bg-background">
-      <main className="container mx-auto px-4 py-2 max-w-3xl">
+      {/* AICODE-NOTE: Design Excellence Check - Skip link for keyboard accessibility (WCAG 2.4.1) */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-black focus:text-white focus:rounded"
+      >
+        Перейти к основному содержимому
+      </a>
+      <main id="main-content" className="container mx-auto px-4 py-2 max-w-3xl">
         {/* Header with Theme Toggle */}
         {/* AICODE-NOTE: T055 - Added ThemeToggle component to header for theme switching */}
         {/* AICODE-NOTE: T165 - Optimized header: removed subtitle, moved title to header row (saves ~40px) */}

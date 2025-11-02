@@ -25,7 +25,8 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { StyleProfile } from '@/types/profile'
 import StyleProfileSection from './style-profile-section'
 import { ru } from '@/lib/i18n'
-import { FileText, Palette, Settings } from 'lucide-react'
+// AICODE-NOTE: Design Excellence Check - Added Loader2 for loading state spinner
+import { FileText, Palette, Settings, Loader2 } from 'lucide-react'
 
 // AICODE-NOTE: T102 - Updated props interface for Phase 10
 // AICODE-NOTE: T131 - currentProfile no longer used for validation (profile is optional)
@@ -90,7 +91,8 @@ export function InputForm({ onSubmit, isLoading, onProfileUpdate }: InputFormPro
               Helps users understand the 3-step process and current position */}
           {/* AICODE-NOTE: T168 - Compact stepper: text-sm → text-xs, mb-4 → mb-2, gap-2 → gap-1 (saves ~15px) */}
           {/* AICODE-NOTE: T179 - Strengthened active step with font-semibold for better contrast */}
-          <div className="flex items-center justify-center gap-1 mb-2 text-xs">
+          {/* AICODE-NOTE: Design Excellence Check - Increased text-xs → text-sm for better mobile readability */}
+          <div className="flex items-center justify-center gap-1 mb-2 text-sm">
             <span className={`transition-colors ${currentSection === 'content' ? 'font-semibold text-blue-600 dark:text-blue-400' : 'font-medium text-muted-foreground'}`}>
               Шаг 1: Контент
             </span>
@@ -158,8 +160,10 @@ export function InputForm({ onSubmit, isLoading, onProfileUpdate }: InputFormPro
                     {/* AICODE-NOTE: No asterisk - this field is optional */}
                   </Label>
                   {/* AICODE-NOTE: T171 - Reduced rows: 6 → 4 (saves ~40px) */}
+                  {/* AICODE-NOTE: Design Excellence Check - Added aria-describedby for screen reader support */}
                   <Textarea
                     id="keyPoints"
+                    aria-describedby="keyPoints-hint"
                     placeholder={ru.inputForm.keyPoints.placeholder}
                     value={keyPoints}
                     onChange={(e) => setKeyPoints(e.target.value)}
@@ -167,7 +171,9 @@ export function InputForm({ onSubmit, isLoading, onProfileUpdate }: InputFormPro
                     rows={4}
                     className="resize-none"
                   />
-                  <p className="text-xs text-muted-foreground">
+                  {/* AICODE-NOTE: Design Excellence Check - Increased text-xs → text-sm for better readability */}
+                  {/* AICODE-NOTE: Design Excellence Check - Added id for aria-describedby association */}
+                  <p id="keyPoints-hint" className="text-sm text-muted-foreground">
                     Опционально: введите основные тезисы статьи по одному на строку
                   </p>
                 </div>
@@ -232,7 +238,8 @@ export function InputForm({ onSubmit, isLoading, onProfileUpdate }: InputFormPro
                     max={5000}
                     step={100}
                   />
-                  <p className="text-xs text-muted-foreground">
+                  {/* AICODE-NOTE: Design Excellence Check - Increased text-xs → text-sm for better readability */}
+                  <p className="text-sm text-muted-foreground">
                     Укажите желаемый размер статьи от 100 до 5000 слов (±10-20% точность)
                   </p>
                 </div>
@@ -268,12 +275,20 @@ export function InputForm({ onSubmit, isLoading, onProfileUpdate }: InputFormPro
               Profile is now optional, so no longer checked */}
           {/* AICODE-NOTE: WCAG 2.5.5 AA - Minimum touch target 44x44px height (h-11) */}
           {/* AICODE-NOTE: T180 - Added gradient for high visual impact and better contrast */}
+          {/* AICODE-NOTE: Design Excellence Check - Added loading spinner for better UX feedback */}
           <Button
             type="submit"
             disabled={!isFormValid || isLoading}
             className="w-full h-11 font-semibold bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
           >
-            {isLoading ? ru.inputForm.button.submitting : ru.inputForm.button.submit}
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                {ru.inputForm.button.submitting}
+              </>
+            ) : (
+              ru.inputForm.button.submit
+            )}
           </Button>
         </form>
       </CardContent>
