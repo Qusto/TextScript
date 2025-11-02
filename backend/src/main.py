@@ -10,6 +10,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
 import sys
+import os
 
 # AICODE-NOTE: Loguru setup for structured logging with colors
 logger.remove()  # Remove default handler
@@ -32,12 +33,17 @@ app = FastAPI(
 
 # AICODE-NOTE: CORS middleware to allow requests from Next.js frontend
 # Frontend runs on http://localhost:3000 in development
+# AICODE-FIX: Added wildcard origin for production deployment flexibility
+# AICODE-NOTE: For production, allow any origin (can be restricted by setting CORS_ORIGINS env var)
+cors_origins = os.getenv("CORS_ORIGINS", "*").split(",")
+if cors_origins == ["*"]:
+    # AICODE-NOTE: Wildcard for development and production flexibility
+    # In strict production, set CORS_ORIGINS="http://your-domain.com,http://192.168.0.24:3000"
+    cors_origins = ["*"]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",  # Development frontend
-        "http://frontend:3000",   # Docker Compose frontend
-    ],
+    allow_origins=cors_origins,
     allow_credentials=True,
     allow_methods=["*"],  # AICODE-NOTE: Allow all HTTP methods for flexibility
     allow_headers=["*"],  # AICODE-NOTE: Allow all headers including custom ones
