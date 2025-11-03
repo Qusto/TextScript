@@ -103,8 +103,15 @@ export default function Home() {
               // AICODE-NOTE: T035 - Append log message to logLines array
               setLogLines((prev) => [...prev, eventData.message])
             } else if (eventData.type === 'result') {
+              // AICODE: BUG-FIX-001 - Fixed result tab empty issue
+              // AICODE: REASON - Backend sends result event with article content in eventData.message
+              //                  Need to ensure we capture and display it properly in result tab
+              // AICODE: IMPACT - Users can now view generated articles in result tab with copy/download buttons
               // AICODE-NOTE: T036 - Result handler sets finalArticle and isLoading=false
-              setFinalArticle(eventData.message)
+              const articleContent = eventData.message || ''
+              if (articleContent.trim().length > 0) {
+                setFinalArticle(articleContent)
+              }
               setIsLoading(false)
             } else if (eventData.type === 'error') {
               // AICODE-NOTE: T051 - Handle backend error events

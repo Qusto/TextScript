@@ -553,6 +553,38 @@ async def _extract_style_from_urls(urls: List[str]) -> str:
                 f"- Concise writing with active voice"
             )
 
+        # AICODE: BUG-FIX-002 - Find Poetry Python for root src/ directory
+        # AICODE: REASON - ugly_script.py has dependencies (requests, etc) in root Poetry env
+        # AICODE: IMPACT - Script now runs with correct dependencies
+        root_dir = script_path.parent.parent
+        root_python = None
+
+        # Try to find Poetry Python for root directory by checking pyproject.toml
+        root_pyproject = root_dir / "pyproject.toml"
+        if root_pyproject.exists():
+            try:
+                import subprocess
+                # Get Poetry cache directory
+                poetry_cache = Path.home() / "Library" / "Caches" / "pypoetry" / "virtualenvs"
+                if poetry_cache.exists():
+                    # Look for text-script (root) venv, not textscript-backend
+                    for venv_dir in poetry_cache.glob("text-script-*"):
+                        if "backend" not in venv_dir.name.lower():
+                            candidate = venv_dir / "bin" / "python"
+                            if candidate.exists():
+                                root_python = candidate
+                                logger.debug(f"Found root Poetry Python: {root_python}")
+                                break
+
+                if not root_python:
+                    logger.warning("Could not find root Poetry Python in cache")
+            except Exception as e:
+                logger.warning(f"Could not find root Poetry Python: {e}")
+
+        # Fallback to sys.executable if Poetry not found
+        python_executable = str(root_python) if root_python else sys.executable
+        logger.debug(f"Using Python executable: {python_executable}")
+
         # AICODE-NOTE: Run ugly_script.py in MODE 1 (no flags = traditional style analysis)
         # Script will:
         # 1. Read links.txt and topic.txt
@@ -561,27 +593,75 @@ async def _extract_style_from_urls(urls: List[str]) -> str:
         # 4. Save profile to cache (style_profiles/{url_hash}.txt)
         # 5. Generate article (which we don't need, but it's part of MODE 1)
 
+        # AICODE: BUG-FIX-002 - Fixed ModuleNotFoundError by setting PYTHONPATH
+        # AICODE: REASON - ugly_script.py uses "from src.config" which fails without proper PYTHONPATH
+        # AICODE: IMPACT - Profile creation now works correctly
+
+        # AICODE-NOTE: Copy all environment variables (including OPENAI_API_KEY)
+        # ugly_script.py needs API key to analyze style
+        env = os.environ.copy()
+
+        # AICODE: BUG-FIX-002 - Load .env from root directory
+        # AICODE: REASON - Backend doesn't have OPENAI_API_KEY in environment
+        # AICODE: IMPACT - Script can now access API key for style analysis
+        env_file = root_dir / ".env"
+        if env_file.exists():
+            # Simple .env parser (no external dependencies)
+            with open(env_file) as f:
+                for line in f:
+                    line = line.strip()
+                    if line and not line.startswith("#") and "=" in line:
+                        key, value = line.split("=", 1)
+                        env[key.strip()] = value.strip()
+            logger.debug(f"Loaded environment from {env_file}")
+        else:
+            logger.warning(f".env file not found at {env_file}")
+
         # AICODE-NOTE: Disable research stage to avoid errors during profile extraction
         # Research stage is not needed for profile creation and can cause parsing errors
-        env = os.environ.copy()
         env["RESEARCH_ENABLED"] = "false"
 
+        # AICODE: BUG-FIX-002 - Set PYTHONPATH to include src directory
+        # This ensures "from src.config import ..." works in subprocess
+        src_dir = script_path.parent.parent
+        env["PYTHONPATH"] = str(src_dir)
+
         logger.info(f"Running style extraction for {len(urls)} URLs...")
+        logger.debug(f"Script path: {script_path}")
+        logger.debug(f"Working directory: {work_dir}")
+        logger.debug(f"Python executable: {python_executable}")
+        logger.debug(f"PYTHONPATH: {env.get('PYTHONPATH')}")
+
         process = await asyncio.create_subprocess_exec(
-            sys.executable,
+            python_executable,  # AICODE: BUG-FIX-002 - Use root Poetry Python
             str(script_path),
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
             cwd=work_dir,  # Run in temp directory where links.txt and topic.txt are
-            env=env,  # Pass environment with RESEARCH_ENABLED=false
+            env=env,  # Pass environment with RESEARCH_ENABLED=false and PYTHONPATH
         )
 
         stdout, stderr = await process.communicate()
 
+        # AICODE: BUG-FIX-002 - Enhanced error logging with stdout and stderr
+        # AICODE: REASON - Original error message was empty, making debugging impossible
+        stdout_text = stdout.decode("utf-8").strip() if stdout else ""
+        stderr_text = stderr.decode("utf-8").strip() if stderr else ""
+
         if process.returncode != 0:
-            error_msg = stderr.decode("utf-8").strip()
-            logger.error(f"Style extraction failed: {error_msg}")
-            raise Exception(f"Style extraction script failed: {error_msg}")
+            logger.error(f"Style extraction script failed with return code: {process.returncode}")
+            logger.error(f"Script path: {script_path}")
+            logger.error(f"Working directory: {work_dir}")
+            logger.error(f"URLs: {urls}")
+
+            if stdout_text:
+                logger.error(f"STDOUT:\n{stdout_text}")
+            if stderr_text:
+                logger.error(f"STDERR:\n{stderr_text}")
+
+            # AICODE: BUG-FIX-002 - Return both stdout and stderr for better error messages
+            error_details = stderr_text or stdout_text or "No error output"
+            raise Exception(f"Style extraction script failed: {error_details}")
 
         # AICODE-NOTE: Read extracted profile from cache
         # Cache location: style_profiles/{md5_hash}.txt

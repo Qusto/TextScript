@@ -70,6 +70,7 @@ export default function StyleProfileSection({ onProfileUpdate }: StyleProfileSec
   useEffect(() => {
     loadProfileStatus()
     loadAllProfiles()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const loadProfileStatus = async () => {
@@ -237,9 +238,16 @@ export default function StyleProfileSection({ onProfileUpdate }: StyleProfileSec
         }),
       })
 
+      // AICODE: BUG-FIX-004 - Fixed [object Object] error display
+      // AICODE: REASON - errorData.detail can be an object {error, message, details},
+      //                  so we need to extract the message property instead of stringifying the whole object
+      // AICODE: IMPACT - Users now see readable error messages instead of "[object Object]"
       if (!response.ok) {
         const errorData = await response.json()
-        throw new Error(errorData.detail || `API error: ${response.status}`)
+        const errorMessage = typeof errorData.detail === 'object' && errorData.detail?.message
+          ? errorData.detail.message
+          : errorData.detail || `API error: ${response.status}`
+        throw new Error(errorMessage)
       }
 
       const newProfile = await response.json()
@@ -470,7 +478,12 @@ export default function StyleProfileSection({ onProfileUpdate }: StyleProfileSec
                 </p>
               </div>
 
+              {/* AICODE: BUG-FIX-003 - Fixed auto-generation after profile error */}
+              {/* AICODE: REASON - Button was missing type="button", defaulting to type="submit"
+                                   which triggered parent form submission (article generation) */}
+              {/* AICODE: IMPACT - Profile creation errors no longer trigger unwanted article generation */}
               <Button
+                type="button"
                 onClick={handleCreateProfile}
                 disabled={isSubmitting || sourceUrls.trim().length === 0}
                 className="w-full"
