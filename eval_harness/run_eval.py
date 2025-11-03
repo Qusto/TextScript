@@ -13,7 +13,6 @@ import sys
 import argparse
 import yaml
 from pathlib import Path
-from typing import Optional
 
 from loguru import logger
 
@@ -192,6 +191,12 @@ Examples:
     )
 
     parser.add_argument(
+        "--perfect-test",
+        action="store_true",
+        help="Enable perfect test mode - use ground truth as generated output for baseline calibration"
+    )
+
+    parser.add_argument(
         "--verbose", "-v",
         action="store_true",
         help="Enable verbose logging output"
@@ -246,10 +251,21 @@ Examples:
         if args.author:
             print(f"Filtering by author: {args.author}")
 
+        # AICODE-NOTE: T116 - Perfect test mode warning
+        if args.perfect_test:
+            print("\n⚠️  PERFECT TEST MODE ENABLED - Using ground truth as generated output")
+            print("This mode is for baseline calibration only. Expected metrics:")
+            print("  - Cosine similarity: ≥0.99")
+            print("  - BERTScore F1: ≥0.98")
+            print("  - Content/Style scores: 5/5")
+
         print()
 
         try:
-            results = runner.run_evaluation(author_filter=args.author)
+            results = runner.run_evaluation(
+                author_filter=args.author,
+                perfect_test=args.perfect_test  # AICODE-NOTE: T117 - Pass perfect test flag
+            )
         except FileNotFoundError as e:
             logger.error(f"Dataset error: {e}")
             sys.exit(EXIT_DATASET_ERROR)

@@ -180,6 +180,18 @@ poetry run python run_eval.py --author "mark_twain" -v
 
 **Time**: ~3-5 minutes for 5 test cases
 
+**Why use author filtering**:
+- Faster iteration during development
+- Test prompt changes on specific writing styles
+- Debug issues with particular authors
+- Save API costs by testing incrementally
+
+**Tips**:
+- Author name must match directory name exactly (case-sensitive)
+- Use quotes if author name has spaces: `--author "Charles Dickens"`
+- Combine with other flags: `--author "mark_twain" --verbose --config custom.yml`
+- Summary statistics will reflect only the filtered author's cases
+
 ### Comparing Two Model/Prompt Versions
 
 ```bash
@@ -191,10 +203,68 @@ poetry run python run_eval.py --config eval_v1.yml
 poetry run python run_eval.py --config eval_v2.yml
 # Output: eval_results/20251103_120000/
 
-# Compare
+# Compare using diff (quick view)
 diff eval_results/20251103_100000/_SUMMARY.csv \
      eval_results/20251103_120000/_SUMMARY.csv
+
+# Compare using pandas (detailed analysis)
+poetry run python examples/compare_runs.py \
+    eval_results/20251103_100000/_SUMMARY.csv \
+    eval_results/20251103_120000/_SUMMARY.csv
 ```
+
+**What to look for in comparisons**:
+- Mean cosine similarity: Higher = better content accuracy
+- Mean BERTScore F1: Higher = better semantic matching
+- Mean content score: Higher = better factual accuracy (1-5 scale)
+- Mean style score: Higher = better style fidelity (1-5 scale)
+
+**Interpreting changes**:
+- Improvement: All metrics increase (e.g., +0.05 cosine, +0.5 content score)
+- Regression: Any metric decreases significantly
+- Trade-off: One metric improves while another degrades
+- Neutral: Changes within ±0.02 for numeric, ±0.2 for judges (measurement noise)
+
+See `examples/compare_runs.py` for automated comparison script.
+
+### Perfect Test Mode (Baseline Calibration)
+
+```bash
+# Run perfect test to establish metric baselines
+poetry run python run_eval.py --perfect-test -v
+```
+
+**What is perfect test mode?**
+Perfect test mode uses the ground truth article as the "generated" output, skipping actual article generation. This establishes the upper bound of metric performance - what scores look like when generation is "perfect."
+
+**Expected results**:
+- Cosine similarity: ≥0.99 (near-perfect semantic match)
+- BERTScore F1: ≥0.98 (near-perfect token alignment)
+- Content score: 5/5 (perfect factual accuracy)
+- Style score: 5/5 (perfect style match to itself)
+
+**Why use perfect test mode?**
+1. **Baseline calibration**: Understand what "perfect" scores look like
+2. **Metric validation**: Verify metrics are working correctly
+3. **Gap analysis**: Compare perfect scores vs. actual scores to measure generation quality headroom
+4. **Debugging**: If perfect test doesn't produce high scores, metrics may have issues
+
+**Example workflow**:
+```bash
+# Step 1: Run perfect test to get baselines
+poetry run python run_eval.py --perfect-test
+# Result: cosine=0.995, bert_f1=0.987, content=5.0, style=5.0
+
+# Step 2: Run normal evaluation
+poetry run python run_eval.py
+# Result: cosine=0.823, bert_f1=0.840, content=3.8, style=3.7
+
+# Step 3: Calculate quality gap
+# Cosine gap: 0.995 - 0.823 = 0.172 (17.2% room for improvement)
+# Content gap: 5.0 - 3.8 = 1.2 points (24% of scale)
+```
+
+**Tip**: Run perfect test after changing evaluation metrics to verify they're calibrated correctly.
 
 ### Debugging Dataset Generation
 

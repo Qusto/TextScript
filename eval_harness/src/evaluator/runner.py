@@ -6,7 +6,7 @@
 
 import json
 from pathlib import Path
-from typing import Dict, Optional, Any, List
+from typing import Dict, Optional, Any
 from datetime import datetime
 
 from loguru import logger
@@ -152,36 +152,46 @@ class EvaluationRunner:
     def _evaluate_case(
         self,
         case_path: Path,
-        output_path: Path
+        output_path: Path,
+        perfect_test: bool = False
     ) -> Optional[Dict[str, Any]]:
         """Evaluate single test case with full pipeline.
 
         Args:
             case_path: Path to test case directory
             output_path: Path to save results
+            perfect_test: If True, use ground truth as generated output (no generation)
 
         Returns:
             Dict with evaluation results, or None on failure
 
         AICODE-NOTE: T082 - Implements full pipeline: load → generate → compute → save
         AICODE-NOTE: T086 - Error recovery to continue on failures
+        AICODE-NOTE: T117 - Perfect test mode support for baseline calibration
         """
         try:
             # AICODE-NOTE: Step 1 - Load test case
             case_data = self._load_test_case(case_path)
 
-            # AICODE-NOTE: Step 2 - Generate article using UglyScriptAdapter
-            logger.info("Generating article...")
-            generated_article = self.adapter.generate_article(
-                source_texts=case_data["source_texts"],
-                topic_data=case_data["topic_data"]
-            )
+            # AICODE-NOTE: T118 - Step 2 - Generate article OR use ground truth (perfect test mode)
+            if perfect_test:
+                # AICODE-NOTE: Perfect test mode - copy ground truth as generated output
+                logger.info("Perfect test mode: using ground truth as generated article")
+                generated_article = case_data["ground_truth_article"]
+                logger.success(f"Using ground truth: {len(generated_article)} chars")
+            else:
+                # AICODE-NOTE: Normal mode - Generate article using UglyScriptAdapter
+                logger.info("Generating article...")
+                generated_article = self.adapter.generate_article(
+                    source_texts=case_data["source_texts"],
+                    topic_data=case_data["topic_data"]
+                )
 
-            if not generated_article or not generated_article.strip():
-                logger.error("Generated article is empty")
-                return None
+                if not generated_article or not generated_article.strip():
+                    logger.error("Generated article is empty")
+                    return None
 
-            logger.success(f"Generated article: {len(generated_article)} chars")
+                logger.success(f"Generated article: {len(generated_article)} chars")
 
             # AICODE-NOTE: Step 3 - Compute metrics (conditionally based on config)
             numeric_metrics_result = None
@@ -291,18 +301,21 @@ class EvaluationRunner:
 
     def run_evaluation(
         self,
-        author_filter: Optional[str] = None
+        author_filter: Optional[str] = None,
+        perfect_test: bool = False
     ) -> Dict[str, Any]:
         """Run evaluation on all test cases in dataset.
 
         Args:
             author_filter: Optional author name to filter cases
+            perfect_test: If True, use ground truth as generated output
 
         Returns:
             Dict with summary of evaluation results
 
         AICODE-NOTE: T085 - Main loop with tqdm progress tracking per author
         AICODE-NOTE: Iterates all test cases, handles errors per case
+        AICODE-NOTE: T117 - Perfect test mode support
         """
         logger.info("Starting evaluation run...")
 
@@ -372,7 +385,8 @@ class EvaluationRunner:
                     # AICODE-NOTE: Evaluate case (with error recovery)
                     result = self._evaluate_case(
                         case_path=case_dir,
-                        output_path=output_case_path
+                        output_path=output_case_path,
+                        perfect_test=perfect_test  # AICODE-NOTE: T117 - Pass perfect test flag
                     )
 
                     results_summary["total_cases"] += 1
