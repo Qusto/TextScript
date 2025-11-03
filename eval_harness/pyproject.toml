@@ -1,0 +1,70 @@
+# AICODE-NOTE: T002, T003 - Poetry configuration for StyleGuard Eval Harness
+# AICODE-NOTE: Python 3.11+ required to match existing backend stack
+# AICODE-NOTE: Dependencies selected based on research.md for LLM integration and metrics
+
+[tool.poetry]
+name = "styleguard-eval-harness"
+version = "1.0.0"
+description = "Automated evaluation harness for testing article generation quality"
+authors = ["TextScript Team"]
+readme = "README.md"
+packages = [{include = "src"}]
+
+[tool.poetry.dependencies]
+# AICODE-NOTE: Core dependencies matching Python 3.11+ features
+python = "^3.11"
+
+# AICODE-NOTE: LLM API clients for neutralization and judging
+openai = "^1.0.0"
+anthropic = "^0.18.0"
+
+# AICODE-NOTE: Configuration and data handling
+pyyaml = "^6.0"
+pydantic = "^2.0.0"
+python-dotenv = "^1.0.0"
+
+# AICODE-NOTE: Metrics libraries for quality evaluation
+sentence-transformers = "^2.2.0"  # Cosine similarity embeddings
+bert-score = "^0.3.13"            # Semantic similarity metric
+
+# AICODE-NOTE: Data processing and reporting
+pandas = "^2.0.0"  # Aggregation and CSV reports
+
+# AICODE-NOTE: CLI utilities and logging
+tqdm = "^4.65.0"   # Progress indicators
+loguru = "^0.7.0"  # Structured logging (reuses backend dependency)
+
+[tool.poetry.group.dev.dependencies]
+# AICODE-NOTE: Testing framework matching backend conventions
+pytest = "^7.4.0"
+pytest-mock = "^3.11.0"
+pytest-asyncio = "^0.21.0"
+pytest-cov = "^4.1.0"
+
+# AICODE-NOTE: Code quality tools
+ruff = "^0.1.0"
+mypy = "^1.7.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+# AICODE-NOTE: Python 3.11+ linting configuration
+target-version = "py311"
+line-length = 100
+
+[tool.mypy]
+# AICODE-NOTE: Strict type checking for better code quality
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+
+[tool.pytest.ini_options]
+# AICODE-NOTE: Test configuration for comprehensive coverage
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-v --cov=src --cov-report=term-missing"

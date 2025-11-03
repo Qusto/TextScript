@@ -1,0 +1,92 @@
+# AICODE-NOTE: T058 - .dockerignore to exclude unnecessary files from Docker context
+# Reduces build context size and speeds up docker build
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Node.js / Next.js (web-frontend)
+web-frontend/node_modules
+web-frontend/.next
+web-frontend/out
+web-frontend/.env*.local
+web-frontend/dist
+web-frontend/build
+web-frontend/*.log
+web-frontend/.DS_Store
+web-frontend/coverage
+web-frontend/.turbo
+
+# Python (backend, src)
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info
+dist
+build
+.eggs
+.venv
+venv
+env
+ENV
+backend/.pytest_cache
+backend/.mypy_cache
+backend/.ruff_cache
+src/.pytest_cache
+src/__pycache__
+
+# Environment files (should use Docker secrets instead)
+.env
+.env.local
+.env.*.local
+*.env
+
+# IDEs
+.vscode
+.idea
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Documentation
+README.md
+*.md
+docs/
+specs/
+
+# CI/CD
+.github
+.gitlab-ci.yml
+.travis.yml
+
+# Testing
+coverage
+.coverage
+htmlcov
+.pytest_cache
+test-results
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Temporary files
+*.tmp
+*.temp
+.cache
+tmp/
+temp/
+
+# Docker
+Dockerfile
+docker-compose*.yml
+.dockerignore

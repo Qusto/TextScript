@@ -55,3 +55,10 @@ poetry.lock
 # OS
 .DS_Store
 Thumbs.db
+
+# Eval Harness (003-style-eval-harness)
+corpus/
+eval_dataset/
+eval_results/
+eval_harness/.venv/
+eval_harness/venv/

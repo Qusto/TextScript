@@ -1,0 +1,63 @@
+# AICODE-NOTE: T059-T062 - Docker Compose configuration for production deployment
+# Orchestrates frontend (Next.js), backend (FastAPI), and shared network
+
+services:
+  # AICODE-NOTE: T059 - Backend service (FastAPI on port 8000)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: textscript-backend
+    ports:
+      - "8000:8000"
+    # AICODE-NOTE: T061 - Volume mount for src/ directory (existing article script)
+    # Mount article script to /src directory for ugly_script.py execution
+    volumes:
+      - ./src:/src:ro  # Read-only mount for security
+    # AICODE-NOTE: Load environment variables from .env file
+    env_file:
+      - .env
+    environment:
+      # AICODE-NOTE: Environment variables for backend configuration
+      - PYTHONPATH=/app:/  # Add root to Python path for 'from src.X' imports
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - MODEL=${MODEL:-openai/gpt-4o-mini}
+      - RESEARCH_ENABLED=${RESEARCH_ENABLED:-false}
+      - RESEARCH_MODEL=${RESEARCH_MODEL:-perplexity/sonar-pro}
+    networks:
+      - textscript-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # AICODE-NOTE: T059 - Frontend service (Next.js on port 3000)
+  frontend:
+    build:
+      context: ./web-frontend
+      dockerfile: Dockerfile
+    container_name: textscript-frontend
+    ports:
+      - "3000:3000"
+    # AICODE-NOTE: T060 - Environment variable for backend URL
+    # IMPORTANT: NEXT_PUBLIC_API_URL must be set during build time (not runtime)
+    # For production deployment, create web-frontend/.env.local with:
+    # NEXT_PUBLIC_API_URL=http://YOUR_SERVER_IP:8000
+    # The Dockerfile will copy .env.local and use it during build
+    environment:
+      - NEXT_PUBLIC_API_URL=http://backend:8000
+    networks:
+      - textscript-network
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+
+# AICODE-NOTE: T062 - Shared network for frontend-backend communication
+# Bridge network allows containers to communicate via service names
+networks:
+  textscript-network:
+    driver: bridge

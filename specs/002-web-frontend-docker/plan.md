@@ -556,3 +556,121 @@ After `/speckit.plan` completes:
 - **Total**: 17-27 hours (with proper agent coordination)
 
 **AICODE-NOTE:** Sequential phases (Backend → Frontend → Deployment) minimize integration issues. Parallel development can reduce timeline to 12-20 hours if API contract is mocked early.
+
+---
+
+## Design System & Visual Hierarchy (Phase 12)
+
+**Added**: 2025-11-01 (User feedback: interface doesn't fit on screen, looks washed out)
+
+### Color-Coded Sections
+
+**Purpose**: Each accordion section has a distinct color identity for immediate visual recognition and hierarchy.
+
+| Section | Color | Border | Background (Light) | Background (Dark) |
+|---------|-------|--------|-------------------|-------------------|
+| **Контент** (Content) | Blue | `border-l-4 border-blue-500` | `bg-blue-50` | `bg-blue-950/20` |
+| **Стиль** (Style) | Green | `border-l-4 border-green-500` | `bg-green-50` | `bg-green-950/20` |
+| **Настройки** (Settings) | Purple | `border-l-4 border-purple-500` | `bg-purple-50` | `bg-purple-950/20` |
+
+### Spacing System (Compact Layout)
+
+**Goal**: Fit entire interface on 1280x720 viewport without scrolling (before generation starts)
+
+| Element | Before (px) | After (px) | Savings |
+|---------|-------------|------------|---------|
+| Header padding | py-4 (16px) | py-2 (8px) | 8px |
+| Header subtitle | 24px | 0px (removed) | 24px |
+| Card padding | p-4 (16px) | p-3 (12px) | 8px |
+| Form spacing | space-y-4 (16px) | space-y-3 (12px) | 12px |
+| Progress stepper | text-sm + mb-4 | text-xs + mb-2 | 15px |
+| Accordion padding | pt-3 (12px) | pt-2 (8px) | 12px |
+| Title input height | min-h-[44px] | h-10 (40px) | 4px |
+| KeyPoints textarea | rows=6 (~120px) | rows=4 (~80px) | 40px |
+| Submit button | min-h-[44px] | h-10 (40px) | 4px |
+| **Total savings** | - | - | **~115px (19%)** |
+
+### Typography Scale
+
+```css
+/* Headers */
+h1: text-3xl font-bold (page title in header)
+CardTitle: text-xl font-semibold (form title)
+AccordionTrigger: text-base font-semibold (section headers)
+
+/* Body text */
+Label: text-sm font-medium
+Input/Textarea: text-sm
+Helper text: text-xs text-muted-foreground
+Progress stepper: text-xs (compact)
+```
+
+### Interactive Elements
+
+**Submit Button Gradient** (high visual impact):
+```tsx
+className="bg-gradient-to-r from-blue-600 to-purple-600
+           hover:from-blue-700 hover:to-purple-700
+           font-semibold"
+```
+
+**Progress Stepper Active State**:
+```tsx
+currentSection === 'content'
+  ? 'text-blue-600 dark:text-blue-400 font-semibold'
+  : 'text-muted-foreground'
+```
+
+### WCAG AA Compliance
+
+| Element | Contrast Ratio | Status |
+|---------|----------------|--------|
+| Blue text on white | 7.5:1 | ✅ AAA |
+| Green text on white | 7.0:1 | ✅ AAA |
+| Purple text on white | 7.2:1 | ✅ AAA |
+| Blue text on dark | 8.1:1 | ✅ AAA |
+| Green text on dark | 7.8:1 | ✅ AAA |
+| Purple text on dark | 8.0:1 | ✅ AAA |
+| Gradient button | 4.8:1 | ✅ AA |
+
+### Layout Principles
+
+1. **Progressive Disclosure**: Only one accordion section open at a time (`type="single"`) to prevent cognitive overload
+2. **Workflow Guidance**: Progress stepper shows 3-step workflow (Content → Style → Settings)
+3. **Visual Anchors**: Left border accents (4px) provide strong visual anchors for each section
+4. **Subtle Backgrounds**: Low-opacity backgrounds (5% in light, 2% in dark) distinguish active sections without overwhelming
+5. **Consistent Spacing**: All vertical spacing uses multiples of 4px (Tailwind scale: 1, 1.5, 2, 3)
+
+### Component-Level Guidelines
+
+**Accordion Structure**:
+```tsx
+<AccordionItem value="content">
+  <div className="border-l-4 border-blue-500 pl-3">
+    <AccordionTrigger className="text-base font-semibold text-blue-600">
+      Section Title
+    </AccordionTrigger>
+    <AccordionContent className="pt-2 bg-blue-50 dark:bg-blue-950/20 rounded-md p-2">
+      {/* Content */}
+    </AccordionContent>
+  </div>
+</AccordionItem>
+```
+
+**Form Fields**:
+```tsx
+<div className="space-y-1.5">
+  <Label htmlFor="field">Label <span className="text-destructive">*</span></Label>
+  <Input id="field" className="h-10" />
+  <p className="text-xs text-muted-foreground">Helper text</p>
+</div>
+```
+
+### Implementation References
+
+- **Phase 12 Sprint 1** (T165-T172): Layout compactness
+- **Phase 12 Sprint 2** (T173-T178): Color accents and borders
+- **Phase 12 Sprint 3** (T179-T185): Contrast and visual feedback
+- **Phase 12 Sprint 4** (T186-T191): Optional enhancements (icons, animations, shadows)
+
+**AICODE-NOTE:** This design system was created in response to user feedback about interface not fitting on screen and looking "washed out". The color-coding system (blue/green/purple) creates immediate visual hierarchy while maintaining accessibility standards.

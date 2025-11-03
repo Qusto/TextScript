@@ -1,0 +1,42 @@
+# AICODE-NOTE: T007 - Example configuration for evaluator (run_eval.py)
+# AICODE-NOTE: Default values from data-model.md specification
+# AICODE-NOTE: All paths are relative to the eval_harness/ directory
+
+# Input dataset location (from prepare_dataset.py)
+dataset_path: "./eval_dataset/"
+
+# Output results location (timestamped directories created automatically)
+output_path: "./eval_results/"
+
+# Model for article generation (Ugly Script)
+# AICODE-NOTE: Uses OpenRouter format for model selection
+# AICODE-NOTE: Can be different from neutralizer_model_id
+generation_model_id: "meta-llama/llama-3-8b-instruct"
+
+# Model for LLM-as-Judge evaluation
+# AICODE-NOTE: GPT-4o recommended for high-quality judgments
+judge_model_id: "openai/gpt-4o"
+
+# Numeric metrics configuration
+# AICODE-NOTE: Set to false to disable expensive metrics (e.g., BERTScore on CPU)
+metrics_numeric:
+  cosine_similarity: true  # Fast, uses sentence-transformers embeddings
+  bert_score: true         # Slower, requires GPU for good performance
+
+# LLM judge metrics configuration
+# AICODE-NOTE: Disable for faster evaluation or cost savings
+metrics_judge:
+  content_judge: true  # Evaluates content accuracy vs. ground truth
+  style_judge: true    # Evaluates style fidelity vs. source texts
+
+# Embedding model for cosine similarity
+# AICODE-NOTE: all-MiniLM-L6-v2 is lightweight and effective
+embedding_model: "all-MiniLM-L6-v2"
+
+# Timeout for LLM API calls (seconds)
+# AICODE-NOTE: Increase if getting timeout errors with large texts
+llm_timeout: 120
+
+# Max retries for failed API calls
+# AICODE-NOTE: Exponential backoff: 1s, 2s, 4s between retries
+max_retries: 3

@@ -3,6 +3,8 @@
 Auto-generated from all feature plans. Last updated: 2025-10-27
 
 ## Active Technologies
+- Python 3.11+ (matching existing backend stack) (003-style-eval-harness)
+- File-based (eval_dataset/, eval_results/ directories with structured JSON and text files) (003-style-eval-harness)
 
 - Python 3.11+ (001-style-article-generator, 002-web-frontend-docker/backend)
 - TypeScript 5.x + Next.js 14 (002-web-frontend-docker/frontend)
@@ -80,10 +82,10 @@ Run comprehensive E2E testing with automated bug fixing:
 **Documentation:** See [QA_WORKFLOW.md](./QA_WORKFLOW.md) for details.
 
 ## Recent Changes
+- 003-style-eval-harness: Added Python 3.11+ (matching existing backend stack)
 
 - 2025-11-02: Added QA Automation system with /qa-cycle command
 - 002-web-frontend-docker: Added Next.js frontend, FastAPI backend, Docker deployment
-- 001-style-article-generator: Added Python 3.11+
 
 <!-- MANUAL ADDITIONS START -->
 <!-- MANUAL ADDITIONS END -->

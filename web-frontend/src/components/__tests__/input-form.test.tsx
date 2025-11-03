@@ -48,7 +48,6 @@ describe('InputForm Component', () => {
       const user = userEvent.setup()
       render(<InputForm onSubmit={mockOnSubmit} isLoading={false} currentProfile={null} />)
 
-      const keyPointsTextarea = screen.getByLabelText(/ключевые тезисы/i)
       await user.type(sourceUrlsTextarea, 'https://example.com\nhttps://test.com')
 
       expect(sourceUrlsTextarea).toHaveValue('https://example.com\nhttps://test.com')
@@ -95,7 +94,6 @@ describe('InputForm Component', () => {
       render(<InputForm onSubmit={mockOnSubmit} isLoading={false} currentProfile={null} />)
 
       const topicInput = screen.getByLabelText(/название статьи/i)
-      const keyPointsTextarea = screen.getByLabelText(/ключевые тезисы/i)
 
       await user.type(topicInput, 'AI Technology')
       await user.type(sourceUrlsTextarea, 'https://example.com')
@@ -113,7 +111,6 @@ describe('InputForm Component', () => {
       render(<InputForm onSubmit={mockOnSubmit} isLoading={false} currentProfile={null} />)
 
       const topicInput = screen.getByLabelText(/название статьи/i)
-      const keyPointsTextarea = screen.getByLabelText(/ключевые тезисы/i)
       const checkbox = screen.getByLabelText(/включить режим исследования/i)
 
       await user.type(topicInput, 'AI Technology')

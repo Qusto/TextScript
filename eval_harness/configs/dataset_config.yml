@@ -1,0 +1,35 @@
+# AICODE-NOTE: T006 - Example configuration for dataset builder (prepare_dataset.py)
+# AICODE-NOTE: Default values from data-model.md specification
+# AICODE-NOTE: All paths are relative to the eval_harness/ directory
+
+# Input corpus location (user-provided text files)
+corpus_path: "./corpus/gutenberg/"
+
+# Output dataset location (generated test cases)
+output_path: "./eval_dataset/"
+
+# Minimum texts required per author to be included
+# AICODE-NOTE: Authors with fewer texts are skipped with warning
+min_texts_per_author: 10
+
+# Number of texts to use for style reference (M in spec)
+# AICODE-NOTE: These texts are concatenated as source_texts.txt
+m_style_texts: 5
+
+# Number of test cases to generate per author (K in spec)
+# AICODE-NOTE: Each test case gets ground_truth_article.txt and neutralized topic.json
+k_test_cases: 5
+
+# Model for topic neutralization
+# AICODE-NOTE: Uses OpenRouter format (anthropic/... or openai/...)
+# AICODE-NOTE: Claude Sonnet recommended for better neutralization quality
+neutralizer_model_id: "anthropic/claude-3-5-sonnet-20240620"
+
+# Maximum tokens to send to neutralizer (for cost control)
+# AICODE-NOTE: Approximation: 1 token ≈ 4 chars, 4000 tokens ≈ 16KB
+max_tokens_for_neutralizer: 4000
+
+# Random seed for reproducibility (optional)
+# AICODE-NOTE: Set to null or omit for random splits
+# AICODE-NOTE: Same seed + same corpus = same dataset splits
+random_seed: 42
