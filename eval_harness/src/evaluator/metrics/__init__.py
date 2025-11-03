@@ -3,7 +3,7 @@
 
 """Metrics computation for evaluation: numeric and LLM-as-Judge."""
 
-from eval_harness.src.evaluator.metrics.numeric import NumericMetrics
-from eval_harness.src.evaluator.metrics.judge import JudgeEvaluator
+from src.evaluator.metrics.numeric import NumericMetrics
+from src.evaluator.metrics.judge import JudgeEvaluator
 
 __all__ = ["NumericMetrics", "JudgeEvaluator"]

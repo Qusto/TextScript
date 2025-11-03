@@ -11,7 +11,7 @@ import numpy as np
 from loguru import logger
 from sentence_transformers import SentenceTransformer
 
-from eval_harness.src.evaluator.config import (
+from src.evaluator.config import (
     CosineSimilarityResult,
     BERTScoreResult
 )

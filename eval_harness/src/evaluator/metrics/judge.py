@@ -10,8 +10,8 @@ from typing import Optional
 
 from loguru import logger
 
-from eval_harness.src.evaluator.config import JudgeResult
-from eval_harness.src.shared.llm_client import LLMClient
+from src.evaluator.config import JudgeResult
+from src.shared.llm_client import LLMClient
 
 
 class JudgeEvaluator:

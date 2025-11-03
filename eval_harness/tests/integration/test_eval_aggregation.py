@@ -141,7 +141,7 @@ class TestResultAggregation:
 
         AICODE-NOTE: T088 - Tests mean computation across all test cases
         """
-        from eval_harness.src.evaluator.aggregator import ResultAggregator
+        from src.evaluator.aggregator import ResultAggregator
 
         aggregator = ResultAggregator()
         summary = aggregator.aggregate_results(eval_results_dir)
@@ -170,7 +170,7 @@ class TestResultAggregation:
 
         AICODE-NOTE: T089 - Tests CSV generation with per-case metrics
         """
-        from eval_harness.src.evaluator.aggregator import ResultAggregator
+        from src.evaluator.aggregator import ResultAggregator
 
         aggregator = ResultAggregator()
         aggregator.generate_summary_csv(eval_results_dir)
@@ -211,7 +211,7 @@ class TestResultAggregation:
 
         AICODE-NOTE: T090 - Tests markdown report generation
         """
-        from eval_harness.src.evaluator.aggregator import ResultAggregator
+        from src.evaluator.aggregator import ResultAggregator
 
         aggregator = ResultAggregator()
         aggregator.generate_summary_md(eval_results_dir)
@@ -243,7 +243,7 @@ class TestResultAggregation:
 
         AICODE-NOTE: T088 - Tests handling of None values in aggregation
         """
-        from eval_harness.src.evaluator.aggregator import ResultAggregator
+        from src.evaluator.aggregator import ResultAggregator
 
         # Remove one metric file to simulate failure
         case_dir = eval_results_dir / "mark_twain" / "case_001"
@@ -261,7 +261,7 @@ class TestResultAggregation:
 
     def test_aggregation_empty_results_dir(self, tmp_path):
         """Test aggregation with no evaluation results."""
-        from eval_harness.src.evaluator.aggregator import ResultAggregator
+        from src.evaluator.aggregator import ResultAggregator
 
         empty_dir = tmp_path / "empty_results"
         empty_dir.mkdir()
@@ -274,7 +274,7 @@ class TestResultAggregation:
 
     def test_summary_csv_format(self, eval_results_dir):
         """Test CSV format matches data-model.md specification."""
-        from eval_harness.src.evaluator.aggregator import ResultAggregator
+        from src.evaluator.aggregator import ResultAggregator
 
         aggregator = ResultAggregator()
         aggregator.generate_summary_csv(eval_results_dir)
@@ -300,7 +300,7 @@ class TestResultAggregation:
 
     def test_aggregation_computes_median_and_std(self, eval_results_dir):
         """Test that aggregation includes median and standard deviation."""
-        from eval_harness.src.evaluator.aggregator import ResultAggregator
+        from src.evaluator.aggregator import ResultAggregator
 
         aggregator = ResultAggregator()
         summary = aggregator.aggregate_results(eval_results_dir)

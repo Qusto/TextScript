@@ -4,13 +4,28 @@
 
 """Integration adapter for Ugly Script article generation."""
 
+import sys
+from pathlib import Path
 from typing import Dict, List, Callable, Optional
 
 from loguru import logger
 
-# AICODE-NOTE: Import from original Ugly Script codebase
-from src.llm_client import LLMClient as UglyScriptLLMClient
-from src.cost_tracker import CostTracker
+# AICODE-NOTE: Lazy import setup for Ugly Script components
+# AICODE-NOTE: We delay importing until runtime to avoid import conflicts during testing
+# AICODE-NOTE: The parent project's src uses "from src.xxx" which conflicts with eval_harness/src
+_parent_dir = Path(__file__).parent.parent.parent.parent
+_ugly_script_src = _parent_dir / "src"
+
+def _setup_ugly_script_imports():
+    """Setup sys.path for Ugly Script imports.
+
+    AICODE-NOTE: Called lazily when UglyScriptAdapter is instantiated
+    AICODE-NOTE: Avoids import-time conflicts with test mocking
+    """
+    if str(_parent_dir) not in sys.path:
+        sys.path.insert(0, str(_parent_dir))
+    if str(_ugly_script_src) not in sys.path:
+        sys.path.insert(0, str(_ugly_script_src))
 
 
 class UglyScriptAdapter:
@@ -38,6 +53,13 @@ class UglyScriptAdapter:
 
         # AICODE-NOTE: Extract API key from eval harness client
         api_key = llm_client.api_key
+
+        # AICODE-NOTE: Setup imports for Ugly Script (lazy loading)
+        _setup_ugly_script_imports()
+
+        # AICODE-NOTE: Import Ugly Script components dynamically
+        from llm_client import LLMClient as UglyScriptLLMClient
+        from cost_tracker import CostTracker
 
         # AICODE-NOTE: Create Ugly Script LLM client with generation model
         self.ugly_script_client = UglyScriptLLMClient(

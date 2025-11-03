@@ -55,7 +55,7 @@ class TestSingleCaseEvaluation:
     @pytest.fixture
     def mock_config(self):
         """Mock EvalConfig for testing."""
-        from eval_harness.src.evaluator.config import EvalConfig
+        from src.evaluator.config import EvalConfig
 
         return EvalConfig(
             dataset_path="./eval_dataset/",
@@ -75,9 +75,9 @@ class TestSingleCaseEvaluation:
             max_retries=3
         )
 
-    @patch('eval_harness.src.evaluator.integration.UglyScriptAdapter')
-    @patch('eval_harness.src.evaluator.metrics.numeric.NumericMetrics')
-    @patch('eval_harness.src.evaluator.metrics.judge.JudgeEvaluator')
+    @patch('src.evaluator.integration.UglyScriptAdapter')
+    @patch('src.evaluator.metrics.numeric.NumericMetrics')
+    @patch('src.evaluator.metrics.judge.JudgeEvaluator')
     def test_evaluate_case_full_pipeline(
         self,
         mock_judge_class,
@@ -91,8 +91,8 @@ class TestSingleCaseEvaluation:
 
         AICODE-NOTE: Tests load → generate → compute metrics → save
         """
-        from eval_harness.src.evaluator.runner import EvaluationRunner
-        from eval_harness.src.evaluator.config import (
+        from src.evaluator.runner import EvaluationRunner
+        from src.evaluator.config import (
             CosineSimilarityResult,
             BERTScoreResult,
             JudgeResult
@@ -170,7 +170,7 @@ class TestSingleCaseEvaluation:
         assert "content_judge" in result
         assert "style_judge" in result
 
-    @patch('eval_harness.src.evaluator.integration.UglyScriptAdapter')
+    @patch('src.evaluator.integration.UglyScriptAdapter')
     def test_evaluate_case_saves_generated_article(
         self,
         mock_adapter_class,
@@ -182,7 +182,7 @@ class TestSingleCaseEvaluation:
 
         AICODE-NOTE: T084 - Tests _save_case_results() file writing
         """
-        from eval_harness.src.evaluator.runner import EvaluationRunner
+        from src.evaluator.runner import EvaluationRunner
 
         mock_adapter = Mock()
         generated_text = "This is the generated article text that should be saved to file."
@@ -209,7 +209,7 @@ class TestSingleCaseEvaluation:
         saved_text = generated_file.read_text(encoding="utf-8")
         assert saved_text == generated_text
 
-    @patch('eval_harness.src.evaluator.metrics.numeric.NumericMetrics')
+    @patch('src.evaluator.metrics.numeric.NumericMetrics')
     def test_evaluate_case_saves_numeric_metrics(
         self,
         mock_numeric_class,
@@ -221,8 +221,8 @@ class TestSingleCaseEvaluation:
 
         AICODE-NOTE: T084 - Tests JSON serialization and file writing
         """
-        from eval_harness.src.evaluator.runner import EvaluationRunner
-        from eval_harness.src.evaluator.config import CosineSimilarityResult, BERTScoreResult
+        from src.evaluator.runner import EvaluationRunner
+        from src.evaluator.config import CosineSimilarityResult, BERTScoreResult
 
         mock_numeric = Mock()
         mock_numeric.compute_cosine_similarity.return_value = CosineSimilarityResult(
@@ -274,7 +274,7 @@ class TestSingleCaseEvaluation:
 
         AICODE-NOTE: T086 - Tests error recovery to continue evaluation
         """
-        from eval_harness.src.evaluator.runner import EvaluationRunner
+        from src.evaluator.runner import EvaluationRunner
 
         mock_adapter = Mock()
         mock_adapter.generate_article.side_effect = RuntimeError("API timeout")
@@ -295,7 +295,7 @@ class TestSingleCaseEvaluation:
         # Result should indicate failure
         assert result is None or "error" in result
 
-    @patch('eval_harness.src.evaluator.metrics.numeric.NumericMetrics')
+    @patch('src.evaluator.metrics.numeric.NumericMetrics')
     def test_evaluate_case_continues_on_metric_failure(
         self,
         mock_numeric_class,
@@ -307,8 +307,8 @@ class TestSingleCaseEvaluation:
 
         AICODE-NOTE: T086 - Tests graceful degradation when metrics fail
         """
-        from eval_harness.src.evaluator.runner import EvaluationRunner
-        from eval_harness.src.evaluator.config import CosineSimilarityResult
+        from src.evaluator.runner import EvaluationRunner
+        from src.evaluator.config import CosineSimilarityResult
 
         mock_numeric = Mock()
         # Cosine works, BERTScore fails
@@ -349,7 +349,7 @@ class TestLoadTestCase:
 
     def test_load_test_case_all_files(self, tmp_path):
         """Test loading all required files from test case directory."""
-        from eval_harness.src.evaluator.runner import EvaluationRunner
+        from src.evaluator.runner import EvaluationRunner
 
         # Create test case directory
         case_dir = tmp_path / "mark_twain" / "case_001"
@@ -381,7 +381,7 @@ class TestLoadTestCase:
 
     def test_load_test_case_missing_file(self, tmp_path):
         """Test error handling when required file is missing."""
-        from eval_harness.src.evaluator.runner import EvaluationRunner
+        from src.evaluator.runner import EvaluationRunner
 
         case_dir = tmp_path / "author" / "case_001"
         case_dir.mkdir(parents=True)
