@@ -9,7 +9,7 @@ from datetime import datetime
 from unittest.mock import Mock, patch, MagicMock
 import numpy as np
 
-from eval_harness.src.evaluator.config import (
+from src.evaluator.config import (
     CosineSimilarityResult,
     BERTScoreResult,
     NumericMetrics
@@ -117,7 +117,7 @@ class TestNumericMetricsComputation:
         AICODE-NOTE: Tests the computation logic, not the actual model
         """
         # AICODE-NOTE: Import will be available after we implement the module
-        from eval_harness.src.evaluator.metrics.numeric import NumericMetrics
+        from src.evaluator.metrics.numeric import NumericMetrics
 
         # Mock the embedding model
         mock_model = Mock()
@@ -146,7 +146,7 @@ class TestNumericMetricsComputation:
     @patch('sentence_transformers.SentenceTransformer')
     def test_cosine_similarity_identical_texts(self, mock_model_class):
         """Test cosine similarity of identical texts should be ~1.0."""
-        from eval_harness.src.evaluator.metrics.numeric import NumericMetrics
+        from src.evaluator.metrics.numeric import NumericMetrics
 
         mock_model = Mock()
         mock_model_class.return_value = mock_model
@@ -164,7 +164,7 @@ class TestNumericMetricsComputation:
     @patch('sentence_transformers.SentenceTransformer')
     def test_cosine_similarity_empty_text(self, mock_model_class, sample_texts):
         """Test cosine similarity with empty text returns None."""
-        from eval_harness.src.evaluator.metrics.numeric import NumericMetrics
+        from src.evaluator.metrics.numeric import NumericMetrics
 
         mock_model = Mock()
         mock_model_class.return_value = mock_model
@@ -192,7 +192,7 @@ class TestNumericMetricsComputation:
         AICODE-NOTE: Mocking bert_score to avoid model download
         AICODE-NOTE: bert_score.score returns (precision, recall, f1) tensors
         """
-        from eval_harness.src.evaluator.metrics.numeric import NumericMetrics
+        from src.evaluator.metrics.numeric import NumericMetrics
 
         # AICODE-NOTE: Mock bert_score.score return value
         # Returns PyTorch tensors with single values
@@ -220,7 +220,7 @@ class TestNumericMetricsComputation:
     @patch('bert_score.score')
     def test_bert_score_empty_text(self, mock_bert_score, sample_texts):
         """Test BERTScore with empty text returns None."""
-        from eval_harness.src.evaluator.metrics.numeric import NumericMetrics
+        from src.evaluator.metrics.numeric import NumericMetrics
 
         metrics = NumericMetrics()
 
@@ -235,7 +235,7 @@ class TestNumericMetricsComputation:
     @patch('bert_score.score')
     def test_bert_score_handles_exceptions(self, mock_bert_score, sample_texts):
         """Test BERTScore handles computation errors gracefully."""
-        from eval_harness.src.evaluator.metrics.numeric import NumericMetrics
+        from src.evaluator.metrics.numeric import NumericMetrics
 
         # Simulate bert_score failure
         mock_bert_score.side_effect = RuntimeError("Out of memory")

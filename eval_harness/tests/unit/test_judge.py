@@ -10,7 +10,7 @@ from datetime import datetime
 from unittest.mock import Mock, patch
 import json
 
-from eval_harness.src.evaluator.config import JudgeResult
+from src.evaluator.config import JudgeResult
 
 
 class TestJudgeResultValidation:
@@ -117,7 +117,7 @@ class TestContentJudgeEvaluator:
 
         AICODE-NOTE: Will be implemented in metrics/judge.py
         """
-        from eval_harness.src.evaluator.metrics.judge import JudgeEvaluator
+        from src.evaluator.metrics.judge import JudgeEvaluator
 
         # Mock LLM response
         mock_llm_client.generate.return_value = json.dumps({
@@ -158,7 +158,7 @@ class TestContentJudgeEvaluator:
 
     def test_content_judge_score_parsing(self, mock_llm_client, sample_texts):
         """Test parsing valid JSON response from content judge."""
-        from eval_harness.src.evaluator.metrics.judge import JudgeEvaluator
+        from src.evaluator.metrics.judge import JudgeEvaluator
 
         # Mock valid JSON response
         mock_llm_client.generate.return_value = json.dumps({
@@ -188,7 +188,7 @@ class TestContentJudgeEvaluator:
 
         AICODE-NOTE: Claude often returns ```json ... ``` format
         """
-        from eval_harness.src.evaluator.metrics.judge import JudgeEvaluator
+        from src.evaluator.metrics.judge import JudgeEvaluator
 
         # Mock response with markdown code block
         mock_llm_client.generate.return_value = """```json
@@ -217,7 +217,7 @@ class TestContentJudgeEvaluator:
 
         AICODE-NOTE: Max 2 retries with format reminder in prompt
         """
-        from eval_harness.src.evaluator.metrics.judge import JudgeEvaluator
+        from src.evaluator.metrics.judge import JudgeEvaluator
 
         # First call: invalid JSON
         # Second call: missing score field
@@ -247,7 +247,7 @@ class TestContentJudgeEvaluator:
 
     def test_content_judge_max_retries_exceeded(self, mock_llm_client, sample_texts):
         """Test failure after max retries (2) exceeded."""
-        from eval_harness.src.evaluator.metrics.judge import JudgeEvaluator
+        from src.evaluator.metrics.judge import JudgeEvaluator
 
         # All responses are malformed
         mock_llm_client.generate.side_effect = [
@@ -294,7 +294,7 @@ class TestStyleJudgeEvaluator:
 
     def test_style_judge_prompt_construction(self, mock_llm_client, sample_texts):
         """Test style judge prompt includes style comparison instructions."""
-        from eval_harness.src.evaluator.metrics.judge import JudgeEvaluator
+        from src.evaluator.metrics.judge import JudgeEvaluator
 
         # Mock LLM response
         mock_llm_client.generate.return_value = json.dumps({
@@ -329,7 +329,7 @@ class TestStyleJudgeEvaluator:
 
     def test_style_judge_score_parsing(self, mock_llm_client, sample_texts):
         """Test parsing valid JSON response from style judge."""
-        from eval_harness.src.evaluator.metrics.judge import JudgeEvaluator
+        from src.evaluator.metrics.judge import JudgeEvaluator
 
         mock_llm_client.generate.return_value = json.dumps({
             "score": 4,
@@ -355,7 +355,7 @@ class TestStyleJudgeEvaluator:
 
     def test_style_judge_empty_texts(self, mock_llm_client):
         """Test style judge with empty texts returns None."""
-        from eval_harness.src.evaluator.metrics.judge import JudgeEvaluator
+        from src.evaluator.metrics.judge import JudgeEvaluator
 
         evaluator = JudgeEvaluator(
             llm_client=mock_llm_client,

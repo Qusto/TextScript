@@ -467,6 +467,305 @@ poetry run mypy src/
 poetry run ruff format src/
 ```
 
+## Common Issues
+
+### Import Errors
+
+**Problem**: `ModuleNotFoundError: No module named 'src.ugly_script'`
+
+**Solution**: Ensure you're in the correct directory and PYTHONPATH is set:
+```bash
+cd eval_harness
+export PYTHONPATH="${PYTHONPATH}:$(pwd)/.."
+poetry run python run_eval.py
+```
+
+### Rate Limiting
+
+**Problem**: `429 Too Many Requests - Rate limit exceeded`
+
+**Solutions**:
+1. Use `--author` flag to evaluate one author at a time
+2. Switch to models with higher rate limits (e.g., gpt-4o-mini)
+3. Disable some metrics to reduce API calls:
+   ```yaml
+   metrics_judge:
+     content_judge: true
+     style_judge: false  # Disable to reduce calls
+   ```
+
+### Memory Issues
+
+**Problem**: `RuntimeError: CUDA out of memory` or `MemoryError`
+
+**Solutions**:
+1. Disable BERTScore: Set `bert_score: false` in config
+2. Use GPU if available: BERTScore auto-detects CUDA
+3. Evaluate fewer cases: Use `--author` filter
+4. Close other applications to free memory
+
+### Slow Performance
+
+**Expected timing per case**:
+- Dataset generation: 20-30 seconds per case
+- Evaluation (with BERTScore, CPU): 40-60 seconds per case
+- Evaluation (with BERTScore, GPU): 10-15 seconds per case
+- Evaluation (without BERTScore): 8-12 seconds per case
+
+**If slower than expected**:
+1. Check API response times with `-v` flag
+2. Disable BERTScore if not needed
+3. Use faster LLM models (gpt-4o-mini instead of gpt-4o)
+4. Check network connectivity to API providers
+
+See [TROUBLESHOOTING.md](./TROUBLESHOOTING.md) for detailed solutions.
+
+## API Reference
+
+### Dataset Builder CLI (`prepare_dataset.py`)
+
+```bash
+poetry run python prepare_dataset.py [OPTIONS]
+```
+
+**Options**:
+- `--config PATH`: Path to YAML config file (default: `./configs/dataset_config.yml`)
+- `-v, --verbose`: Enable verbose logging (DEBUG level)
+- `-h, --help`: Show help message
+
+**Exit Codes**:
+- `0`: Success
+- `1`: Configuration error (invalid config file or validation failure)
+- `2`: Corpus not found (missing or empty corpus directory)
+- `3`: API error (LLM authentication or rate limit issues)
+
+**Configuration Schema** (`dataset_config.yml`):
+```yaml
+corpus_path: str                      # Path to text corpus (required)
+output_path: str                      # Output directory (required)
+min_texts_per_author: int            # Min texts per author (≥ M+K)
+m_style_texts: int                   # Style reference texts (3-7)
+k_test_cases: int                    # Test cases per author (3-10)
+neutralizer_model_id: str            # LLM for topic neutralization
+max_tokens_for_neutralizer: int      # Max tokens per neutralization (2000-8000)
+random_seed: int                     # Random seed for reproducibility (optional)
+```
+
+**Example**:
+```bash
+# Basic usage
+poetry run python prepare_dataset.py
+
+# Custom config with verbose output
+poetry run python prepare_dataset.py --config my_dataset.yml -v
+
+# Redirect logs to file
+poetry run python prepare_dataset.py -v 2>&1 | tee dataset.log
+```
+
+### Evaluator CLI (`run_eval.py`)
+
+```bash
+poetry run python run_eval.py [OPTIONS]
+```
+
+**Options**:
+- `--config PATH`: Path to YAML config file (default: `./configs/eval_config.yml`)
+- `--author NAME`: Evaluate specific author only (optional)
+- `--perfect-test`: Use ground truth as generated output (baseline mode)
+- `-v, --verbose`: Enable verbose logging (DEBUG level)
+- `-h, --help`: Show help message
+
+**Exit Codes**:
+- `0`: Success
+- `1`: Configuration error (invalid config file or validation failure)
+- `2`: Dataset error (dataset directory not found or invalid structure)
+- `3`: API error (LLM authentication or rate limit issues)
+- `4`: Filesystem error (permission denied or disk full)
+- `5`: Integration error (cannot import `src.ugly_script`)
+
+**Configuration Schema** (`eval_config.yml`):
+```yaml
+dataset_path: str                    # Path to eval dataset (required)
+output_path: str                     # Output directory (required)
+generation_model_id: str             # Model for article generation
+judge_model_id: str                  # Model for LLM-as-judge evaluation
+embedding_model: str                 # Sentence transformer model (default: all-MiniLM-L6-v2)
+llm_timeout: int                     # API timeout in seconds (default: 120)
+max_retries: int                     # Max API retry attempts (default: 3)
+
+metrics_numeric:                     # Numeric metrics configuration
+  cosine_similarity: bool           # Enable cosine similarity (default: true)
+  bert_score: bool                  # Enable BERTScore (default: true)
+
+metrics_judge:                       # Judge metrics configuration
+  content_judge: bool               # Enable content judge (default: true)
+  style_judge: bool                 # Enable style judge (default: true)
+```
+
+**Examples**:
+```bash
+# Basic usage
+poetry run python run_eval.py
+
+# Evaluate specific author
+poetry run python run_eval.py --author "mark_twain"
+
+# Perfect test mode (baseline calibration)
+poetry run python run_eval.py --perfect-test
+
+# Custom config with verbose output
+poetry run python run_eval.py --config my_eval.yml -v
+
+# Multiple options
+poetry run python run_eval.py --author "charles_dickens" --config fast_eval.yml -v
+```
+
+### Output Format
+
+**Dataset Structure** (`eval_dataset/`):
+```
+eval_dataset/
+├── [author_name]/
+│   └── case_[NNN]/
+│       ├── source_texts.txt          # M concatenated style texts
+│       ├── ground_truth_article.txt  # Original article for comparison
+│       └── topic.json                # Neutralized topic with theses
+```
+
+**Evaluation Results** (`eval_results/[TIMESTAMP]/`):
+```
+eval_results/20251103_103045/
+├── _SUMMARY.csv                      # Per-case metrics in CSV format
+├── _SUMMARY.md                       # Human-readable summary report
+└── [author_name]/
+    └── case_[NNN]/
+        ├── generated_article.txt     # Generated article
+        ├── metrics_numeric.json      # Cosine similarity + BERTScore
+        ├── metrics_judge_content.json  # Content judge results
+        └── metrics_judge_style.json    # Style judge results
+```
+
+**Summary CSV Columns**:
+- `author`: Author name
+- `case`: Case ID (case_001, case_002, ...)
+- `cosine_sim`: Cosine similarity score (0.0-1.0)
+- `bert_precision`: BERTScore precision (0.0-1.0)
+- `bert_recall`: BERTScore recall (0.0-1.0)
+- `bert_f1`: BERTScore F1 score (0.0-1.0)
+- `content_score`: Content judge score (1-5)
+- `style_score`: Style judge score (1-5)
+
+**Aggregate Rows** (appended to CSV):
+- `MEAN`: Mean values across all cases
+- `MEDIAN`: Median values across all cases
+- `STD`: Standard deviation across all cases
+
+### Metrics Reference
+
+**Cosine Similarity** (0.0-1.0):
+- Measures semantic similarity using sentence embeddings
+- **0.9-1.0**: Excellent - nearly identical content
+- **0.8-0.9**: Good - strong semantic alignment
+- **0.7-0.8**: Fair - moderate similarity
+- **<0.7**: Poor - significant content differences
+
+**BERTScore F1** (0.0-1.0):
+- Token-level semantic similarity using BERT embeddings
+- **0.9-1.0**: Excellent - high token overlap
+- **0.8-0.9**: Good - strong alignment
+- **0.7-0.8**: Fair - moderate alignment
+- **<0.7**: Poor - weak alignment
+
+**Content Judge** (1-5):
+- LLM evaluates factual accuracy and completeness
+- **5**: Perfect - all key ideas present and accurate
+- **4**: Good - most ideas present with minor gaps
+- **3**: Fair - notable gaps or inaccuracies
+- **2**: Poor - significant missing content
+- **1**: Failed - mostly unrelated or incorrect
+
+**Style Judge** (1-5):
+- LLM evaluates stylistic similarity to author
+- **5**: Perfect - indistinguishable from author
+- **4**: Good - recognizable author voice
+- **3**: Fair - some stylistic elements present
+- **2**: Poor - weak style imitation
+- **1**: Failed - completely different style
+
+### Advanced Usage
+
+**Comparing Two Runs**:
+```python
+import pandas as pd
+
+# Load two evaluation runs
+df1 = pd.read_csv('eval_results/run1/_SUMMARY.csv')
+df2 = pd.read_csv('eval_results/run2/_SUMMARY.csv')
+
+# Extract mean rows
+mean1 = df1[df1['author'] == 'MEAN']
+mean2 = df2[df2['author'] == 'MEAN']
+
+# Compare metrics
+print(f"Cosine diff: {mean2['cosine_sim'].values[0] - mean1['cosine_sim'].values[0]:.3f}")
+print(f"Content diff: {mean2['content_score'].values[0] - mean1['content_score'].values[0]:.1f}")
+```
+
+**Filtering Results**:
+```python
+# Load results
+df = pd.read_csv('eval_results/20251103_103045/_SUMMARY.csv')
+
+# Filter to data rows (exclude MEAN/MEDIAN/STD)
+data = df[~df['author'].isin(['MEAN', 'MEDIAN', 'STD'])]
+
+# Find best/worst cases
+best = data.nlargest(5, 'content_score')
+worst = data.nsmallest(5, 'content_score')
+```
+
+**Custom Metrics Analysis**:
+```python
+# Load individual case results
+import json
+
+with open('eval_results/.../case_001/metrics_numeric.json') as f:
+    numeric = json.load(f)
+
+print(f"Cosine: {numeric['cosine_similarity']['score']}")
+print(f"BERTScore F1: {numeric['bert_score']['f1']}")
+
+with open('eval_results/.../case_001/metrics_judge_content.json') as f:
+    judge = json.load(f)
+
+print(f"Content score: {judge['score']}")
+print(f"Reasoning: {judge['reasoning']}")
+```
+
+## Performance Tips
+
+### Optimizing for Speed
+1. **Disable slow metrics**: Set `bert_score: false` (5x faster)
+2. **Use faster models**: Switch to `gpt-4o-mini` for judging (2x faster)
+3. **Reduce dataset size**: Start with 3 cases per author
+4. **Use GPU**: BERTScore is 10x faster with CUDA
+5. **Filter by author**: Test incrementally with `--author` flag
+
+### Optimizing for Cost
+1. **Use cheaper models**: `gpt-4o-mini` instead of `gpt-4o` (10x cheaper)
+2. **Disable judge metrics**: Only use numeric metrics if budget is tight
+3. **Smaller dataset**: Fewer test cases = fewer API calls
+4. **Cache results**: Don't re-evaluate unchanged configurations
+5. **Batch evaluation**: Evaluate multiple authors in one run (cheaper than separate runs)
+
+### Optimizing for Quality
+1. **Enable all metrics**: Use both numeric and judge evaluations
+2. **Use best judge model**: `gpt-4o` or `claude-3-5-sonnet` for most accurate judging
+3. **Larger dataset**: More cases per author (10+) for reliable statistics
+4. **Multiple runs**: Run evaluation 2-3 times to check consistency
+5. **Perfect test mode**: Establish baseline before real evaluation
+
 ## License
 
 Part of the TextScript project. See main repository for license information.

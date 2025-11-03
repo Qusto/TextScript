@@ -42,7 +42,7 @@ class TestUglyScriptAdapter:
 
         AICODE-NOTE: T062 - Tests __init__() with model configuration
         """
-        from eval_harness.src.evaluator.integration import UglyScriptAdapter
+        from src.evaluator.integration import UglyScriptAdapter
 
         adapter = UglyScriptAdapter(
             llm_client=mock_llm_client,
@@ -52,7 +52,7 @@ class TestUglyScriptAdapter:
         assert adapter.generation_model_id == sample_data["generation_model_id"]
         assert adapter.llm_client == mock_llm_client
 
-    @patch('eval_harness.src.evaluator.integration.CostTracker')
+    @patch('src.evaluator.integration.CostTracker')
     def test_generate_article_calls_analyze_style(
         self,
         mock_cost_tracker_class,
@@ -64,7 +64,7 @@ class TestUglyScriptAdapter:
         AICODE-NOTE: T063 - Tests analyze_style() invocation
         AICODE-NOTE: Ugly Script requires style analysis before generation
         """
-        from eval_harness.src.evaluator.integration import UglyScriptAdapter
+        from src.evaluator.integration import UglyScriptAdapter
 
         # Mock CostTracker methods
         mock_cost_tracker = Mock()
@@ -93,7 +93,7 @@ class TestUglyScriptAdapter:
         # Verify result
         assert result == "Generated article text here."
 
-    @patch('eval_harness.src.evaluator.integration.CostTracker')
+    @patch('src.evaluator.integration.CostTracker')
     def test_generate_article_calls_generate_with_topic(
         self,
         mock_cost_tracker_class,
@@ -105,7 +105,7 @@ class TestUglyScriptAdapter:
         AICODE-NOTE: T063 - Tests generate_article() invocation
         AICODE-NOTE: Topic and theses are formatted into content prompt
         """
-        from eval_harness.src.evaluator.integration import UglyScriptAdapter
+        from src.evaluator.integration import UglyScriptAdapter
 
         mock_cost_tracker = Mock()
         mock_cost_tracker.analyze_style.return_value = "Style: humorous"
@@ -136,7 +136,7 @@ class TestUglyScriptAdapter:
         for thesis in sample_data["theses"]:
             assert thesis in topic_arg
 
-    @patch('eval_harness.src.evaluator.integration.CostTracker')
+    @patch('src.evaluator.integration.CostTracker')
     def test_generate_article_handles_api_timeout(
         self,
         mock_cost_tracker_class,
@@ -147,7 +147,7 @@ class TestUglyScriptAdapter:
 
         AICODE-NOTE: T064 - Tests timeout error handling
         """
-        from eval_harness.src.evaluator.integration import UglyScriptAdapter
+        from src.evaluator.integration import UglyScriptAdapter
 
         mock_cost_tracker = Mock()
         mock_cost_tracker.analyze_style.side_effect = TimeoutError("API timeout")
@@ -168,7 +168,7 @@ class TestUglyScriptAdapter:
                 }
             )
 
-    @patch('eval_harness.src.evaluator.integration.CostTracker')
+    @patch('src.evaluator.integration.CostTracker')
     def test_generate_article_handles_api_failure(
         self,
         mock_cost_tracker_class,
@@ -179,7 +179,7 @@ class TestUglyScriptAdapter:
 
         AICODE-NOTE: T064 - Tests API error handling with context
         """
-        from eval_harness.src.evaluator.integration import UglyScriptAdapter
+        from src.evaluator.integration import UglyScriptAdapter
 
         mock_cost_tracker = Mock()
         mock_cost_tracker.analyze_style.return_value = "Style profile"
@@ -201,7 +201,7 @@ class TestUglyScriptAdapter:
                 }
             )
 
-    @patch('eval_harness.src.evaluator.integration.CostTracker')
+    @patch('src.evaluator.integration.CostTracker')
     def test_generate_article_with_progress_callback(
         self,
         mock_cost_tracker_class,
@@ -212,7 +212,7 @@ class TestUglyScriptAdapter:
 
         AICODE-NOTE: T065 - Tests optional callback for progress tracking
         """
-        from eval_harness.src.evaluator.integration import UglyScriptAdapter
+        from src.evaluator.integration import UglyScriptAdapter
 
         mock_cost_tracker = Mock()
         mock_cost_tracker.analyze_style.return_value = "Style profile"
@@ -244,7 +244,7 @@ class TestUglyScriptAdapter:
         assert any("style" in msg.lower() for msg in call_messages)
         assert any("generat" in msg.lower() for msg in call_messages)
 
-    @patch('eval_harness.src.evaluator.integration.CostTracker')
+    @patch('src.evaluator.integration.CostTracker')
     def test_generate_article_returns_text(
         self,
         mock_cost_tracker_class,
@@ -252,7 +252,7 @@ class TestUglyScriptAdapter:
         sample_data
     ):
         """Test generate_article() returns generated text string."""
-        from eval_harness.src.evaluator.integration import UglyScriptAdapter
+        from src.evaluator.integration import UglyScriptAdapter
 
         mock_cost_tracker = Mock()
         mock_cost_tracker.analyze_style.return_value = "Style profile"
@@ -278,7 +278,7 @@ class TestUglyScriptAdapter:
 
     def test_generate_article_validates_inputs(self, mock_llm_client, sample_data):
         """Test input validation for source_texts and topic_data."""
-        from eval_harness.src.evaluator.integration import UglyScriptAdapter
+        from src.evaluator.integration import UglyScriptAdapter
 
         adapter = UglyScriptAdapter(
             llm_client=mock_llm_client,

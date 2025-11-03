@@ -94,11 +94,11 @@ class TestEvaluatorCLIContract:
             yaml.dump(config_data, f)
 
         # Mock the main evaluation logic to avoid running full evaluation
-        with patch('eval_harness.run_eval.EvaluationRunner') as mock_runner:
+        with patch('src.run_eval.EvaluationRunner') as mock_runner:
             mock_runner.return_value.run_evaluation.return_value = {}
 
             # Import and run main without --config argument
-            from eval_harness.run_eval import main
+            from src.run_eval import main
 
             # Should load from default path
             with pytest.raises(SystemExit) as exc_info:
@@ -112,8 +112,8 @@ class TestEvaluatorCLIContract:
 
         AICODE-NOTE: T092 - Tests custom config path argument
         """
-        with patch('eval_harness.run_eval.EvaluationRunner') as mock_runner:
-            with patch('eval_harness.run_eval.load_config') as mock_load:
+        with patch('src.run_eval.EvaluationRunner') as mock_runner:
+            with patch('src.run_eval.load_config') as mock_load:
                 mock_load.return_value = Mock()
 
                 # Run with custom config
@@ -138,11 +138,11 @@ class TestEvaluatorCLIContract:
 
         AICODE-NOTE: T092 - Tests author filtering parameter
         """
-        with patch('eval_harness.run_eval.EvaluationRunner') as mock_runner:
+        with patch('src.run_eval.EvaluationRunner') as mock_runner:
             mock_instance = Mock()
             mock_runner.return_value = mock_instance
 
-            from eval_harness.run_eval import main
+            from src.run_eval import main
 
             # Mock sys.argv for author filter
             with patch.object(sys, 'argv', ['run_eval.py', '--author', 'mark_twain']):
@@ -190,7 +190,7 @@ class TestEvaluatorCLIContract:
         (dataset_dir / "topic.json").write_text('{"topic": "Test", "theses": ["T1"]}', encoding="utf-8")
 
         # Mock evaluation to succeed
-        with patch('eval_harness.run_eval.EvaluationRunner') as mock_runner:
+        with patch('src.run_eval.EvaluationRunner') as mock_runner:
             mock_instance = Mock()
             mock_instance.run_evaluation.return_value = {"status": "success"}
             mock_runner.return_value = mock_instance
@@ -260,7 +260,7 @@ class TestEvaluatorCLIContract:
         (dataset_dir / "topic.json").write_text('{"topic": "Test", "theses": ["T1"]}', encoding="utf-8")
 
         # Mock API failure
-        with patch('eval_harness.run_eval.UglyScriptAdapter') as mock_adapter:
+        with patch('src.run_eval.UglyScriptAdapter') as mock_adapter:
             mock_adapter.return_value.generate_article.side_effect = RuntimeError("API authentication failed")
 
             result = subprocess.run(
@@ -313,7 +313,7 @@ class TestCLIOutputFormat:
     def test_normal_mode_output_format(self):
         """Test normal mode output includes required information."""
         # Mock evaluation
-        with patch('eval_harness.run_eval.EvaluationRunner') as mock_runner:
+        with patch('src.run_eval.EvaluationRunner') as mock_runner:
             mock_instance = Mock()
             mock_instance.run_evaluation.return_value = {
                 "total_cases": 5,
@@ -346,7 +346,7 @@ class TestCLIOutputFormat:
 
     def test_author_filter_output(self):
         """Test author filter mode shows filtered results."""
-        with patch('eval_harness.run_eval.EvaluationRunner') as mock_runner:
+        with patch('src.run_eval.EvaluationRunner') as mock_runner:
             mock_instance = Mock()
             mock_instance.run_evaluation.return_value = {
                 "total_cases": 5,
