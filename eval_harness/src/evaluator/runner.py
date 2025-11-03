@@ -5,6 +5,7 @@
 """Main evaluation runner for StyleGuard eval harness."""
 
 import json
+import time
 from pathlib import Path
 from typing import Dict, Optional, Any
 from datetime import datetime
@@ -16,6 +17,15 @@ from src.evaluator.config import EvalConfig, NumericMetrics
 from src.evaluator.integration import UglyScriptAdapter
 from src.evaluator.metrics.numeric import NumericMetrics as NumericMetricsComputer
 from src.evaluator.metrics.judge import JudgeEvaluator
+
+
+# AICODE-NOTE: Stage icons for colorful logging
+STAGE_ICONS = {
+    "load": "📦",
+    "generate": "⚙️",
+    "metrics": "📊",
+    "save": "💾"
+}
 
 
 class EvaluationRunner:
@@ -51,6 +61,50 @@ class EvaluationRunner:
 
         logger.info("EvaluationRunner initialized")
 
+    def _format_size(self, num_chars: int) -> str:
+        """Format text size in KB or MB.
+
+        Args:
+            num_chars: Number of characters
+
+        Returns:
+            Formatted string like "50KB" or "1.5MB"
+
+        AICODE-NOTE: Helper for compact size display
+        """
+        kb = num_chars / 1024
+        if kb < 1024:
+            return f"{kb:.0f}KB"
+        else:
+            mb = kb / 1024
+            return f"{mb:.1f}MB"
+
+    def _get_text_stats(self, text: str) -> str:
+        """Get compact text statistics.
+
+        Args:
+            text: Text to analyze
+
+        Returns:
+            Formatted string like "150KB (120,000 chars)"
+
+        AICODE-NOTE: Combines size and char count
+        """
+        return f"{self._format_size(len(text))} ({len(text):,} chars)"
+
+    def _log_stage(self, stage_num: int, total: int, icon: str, message: str) -> None:
+        """Log evaluation stage with color and icon.
+
+        Args:
+            stage_num: Current stage number (1-4)
+            total: Total stages (4)
+            icon: Emoji icon from STAGE_ICONS
+            message: Stage description
+
+        AICODE-NOTE: Uses Loguru markup for cyan color
+        """
+        logger.info(f"<cyan>[{stage_num}/{total}] {icon} {message}</cyan>")
+
     def _load_test_case(self, case_path: Path) -> Dict[str, Any]:
         """Load test case files from dataset directory.
 
@@ -66,8 +120,6 @@ class EvaluationRunner:
         AICODE-NOTE: T081 - Loads 3 required files from test case directory
         AICODE-NOTE: Returns dict with all data needed for evaluation
         """
-        logger.debug(f"Loading test case from {case_path}")
-
         # AICODE-NOTE: Load source_texts.txt
         source_texts_file = case_path / "source_texts.txt"
         if not source_texts_file.exists():
@@ -90,7 +142,16 @@ class EvaluationRunner:
         with open(topic_file, 'r', encoding="utf-8") as f:
             topic_data = json.load(f)
 
-        logger.success(f"Loaded test case: {len(source_texts)} chars source, {len(ground_truth_article)} chars ground truth")
+        # AICODE-NOTE: Log compact input summary with yellow color
+        topic_name = topic_data.get("topic", "Unknown")[:40]  # Truncate long topics
+        if len(topic_data.get("topic", "")) > 40:
+            topic_name += "..."
+
+        logger.info(
+            f"  <yellow>Input: source={self._format_size(len(source_texts))} "
+            f"ground_truth={self._format_size(len(ground_truth_article))} "
+            f"topic=\"{topic_name}\"</yellow>"
+        )
 
         return {
             "source_texts": source_texts,
@@ -117,6 +178,7 @@ class EvaluationRunner:
 
         AICODE-NOTE: T084 - Writes 4 files to output directory
         AICODE-NOTE: Creates output directory if it doesn't exist
+        AICODE-NOTE: Simplified logging - no DEBUG messages
         """
         # AICODE-NOTE: Create output directory
         output_path.mkdir(parents=True, exist_ok=True)
@@ -124,30 +186,24 @@ class EvaluationRunner:
         # AICODE-NOTE: Save generated article
         generated_file = output_path / "generated_article.txt"
         generated_file.write_text(generated_article, encoding="utf-8")
-        logger.debug(f"Saved generated article: {generated_file}")
 
         # AICODE-NOTE: Save numeric metrics (if available)
         if numeric_metrics is not None:
             metrics_file = output_path / "metrics_numeric.json"
             with open(metrics_file, 'w', encoding="utf-8") as f:
                 json.dump(numeric_metrics.model_dump(mode='json'), f, indent=2)
-            logger.debug(f"Saved numeric metrics: {metrics_file}")
 
         # AICODE-NOTE: Save content judge result (if available)
         if content_judge is not None:
             content_file = output_path / "metrics_judge_content.json"
             with open(content_file, 'w', encoding="utf-8") as f:
                 json.dump(content_judge.model_dump(mode='json'), f, indent=2)
-            logger.debug(f"Saved content judge: {content_file}")
 
         # AICODE-NOTE: Save style judge result (if available)
         if style_judge is not None:
             style_file = output_path / "metrics_judge_style.json"
             with open(style_file, 'w', encoding="utf-8") as f:
                 json.dump(style_judge.model_dump(mode='json'), f, indent=2)
-            logger.debug(f"Saved style judge: {style_file}")
-
-        logger.success(f"Saved all results to {output_path}")
 
     def _evaluate_case(
         self,
@@ -168,20 +224,22 @@ class EvaluationRunner:
         AICODE-NOTE: T082 - Implements full pipeline: load → generate → compute → save
         AICODE-NOTE: T086 - Error recovery to continue on failures
         AICODE-NOTE: T117 - Perfect test mode support for baseline calibration
+        AICODE-NOTE: Enhanced with colorful stage-based logging
         """
         try:
-            # AICODE-NOTE: Step 1 - Load test case
+            # AICODE-NOTE: Stage 1 - Load test case
+            self._log_stage(1, 4, STAGE_ICONS["load"], "Loading test case")
             case_data = self._load_test_case(case_path)
 
-            # AICODE-NOTE: T118 - Step 2 - Generate article OR use ground truth (perfect test mode)
+            # AICODE-NOTE: Stage 2 - Generate article OR use ground truth (perfect test mode)
             if perfect_test:
-                # AICODE-NOTE: Perfect test mode - copy ground truth as generated output
-                logger.info("Perfect test mode: using ground truth as generated article")
+                self._log_stage(2, 4, STAGE_ICONS["generate"], "Using ground truth (perfect test)")
                 generated_article = case_data["ground_truth_article"]
-                logger.success(f"Using ground truth: {len(generated_article)} chars")
+                logger.info(f"  <green>Using ground truth: {self._get_text_stats(generated_article)}</green>")
             else:
-                # AICODE-NOTE: Normal mode - Generate article using UglyScriptAdapter
-                logger.info("Generating article...")
+                self._log_stage(2, 4, STAGE_ICONS["generate"], "Generating article")
+                start_time = time.time()
+
                 generated_article = self.adapter.generate_article(
                     source_texts=case_data["source_texts"],
                     topic_data=case_data["topic_data"]
@@ -191,50 +249,44 @@ class EvaluationRunner:
                     logger.error("Generated article is empty")
                     return None
 
-                logger.success(f"Generated article: {len(generated_article)} chars")
+                elapsed = time.time() - start_time
+                logger.info(
+                    f"  <green>Generated: {self._get_text_stats(generated_article)} "
+                    f"in {elapsed:.1f}s</green>"
+                )
 
-            # AICODE-NOTE: Step 3 - Compute metrics (conditionally based on config)
+            # AICODE-NOTE: Stage 3 - Compute metrics (conditionally based on config)
+            self._log_stage(3, 4, STAGE_ICONS["metrics"], "Computing metrics")
+
             numeric_metrics_result = None
             content_judge_result = None
             style_judge_result = None
 
-            # AICODE-NOTE: T083 - Conditional metric computation based on config
+            # AICODE-NOTE: T083 - Conditional metric computation (silent execution)
             # Numeric metrics
             if self.numeric_metrics is not None:
-                logger.info("Computing numeric metrics...")
-
                 cosine_result = None
                 bert_result = None
 
                 # AICODE-NOTE: Compute cosine similarity if enabled
                 if self.config.metrics_numeric.get("cosine_similarity", False):
                     try:
-                        logger.debug("Computing cosine similarity...")
                         cosine_result = self.numeric_metrics.compute_cosine_similarity(
                             generated_article,
                             case_data["ground_truth_article"]
                         )
-                        if cosine_result:
-                            logger.success(f"Cosine similarity: {cosine_result.score:.3f}")
                     except Exception as e:
                         logger.warning(f"Cosine similarity failed: {e}")
-                else:
-                    logger.info("Cosine similarity disabled in config")
 
                 # AICODE-NOTE: Compute BERTScore if enabled
                 if self.config.metrics_numeric.get("bert_score", False):
                     try:
-                        logger.debug("Computing BERTScore...")
                         bert_result = self.numeric_metrics.compute_bert_score(
                             generated_article,
                             case_data["ground_truth_article"]
                         )
-                        if bert_result:
-                            logger.success(f"BERTScore F1: {bert_result.f1:.3f}")
                     except Exception as e:
                         logger.warning(f"BERTScore failed: {e}")
-                else:
-                    logger.info("BERTScore disabled in config")
 
                 # AICODE-NOTE: Create NumericMetrics object if any metric succeeded
                 if cosine_result or bert_result:
@@ -245,39 +297,28 @@ class EvaluationRunner:
 
             # Judge evaluations
             if self.judge_evaluator is not None:
-                logger.info("Computing judge evaluations...")
-
                 # AICODE-NOTE: Content judge if enabled
                 if self.config.metrics_judge.get("content_judge", False):
                     try:
-                        logger.debug("Evaluating content accuracy...")
                         content_judge_result = self.judge_evaluator.evaluate_content(
                             generated_article,
                             case_data["ground_truth_article"]
                         )
-                        if content_judge_result:
-                            logger.success(f"Content score: {content_judge_result.score}/5")
                     except Exception as e:
                         logger.warning(f"Content judge failed: {e}")
-                else:
-                    logger.info("Content judge disabled in config")
 
                 # AICODE-NOTE: Style judge if enabled
                 if self.config.metrics_judge.get("style_judge", False):
                     try:
-                        logger.debug("Evaluating style fidelity...")
                         style_judge_result = self.judge_evaluator.evaluate_style(
                             generated_article,
                             case_data["source_texts"]
                         )
-                        if style_judge_result:
-                            logger.success(f"Style score: {style_judge_result.score}/5")
                     except Exception as e:
                         logger.warning(f"Style judge failed: {e}")
-                else:
-                    logger.info("Style judge disabled in config")
 
-            # AICODE-NOTE: Step 4 - Save results
+            # AICODE-NOTE: Stage 4 - Save results
+            self._log_stage(4, 4, STAGE_ICONS["save"], "Saving results")
             self._save_case_results(
                 output_path=output_path,
                 generated_article=generated_article,
@@ -285,6 +326,25 @@ class EvaluationRunner:
                 content_judge=content_judge_result,
                 style_judge=style_judge_result
             )
+            logger.info(f"  <magenta>Output: {output_path}</magenta>")
+
+            # AICODE-NOTE: Log results summary in one line with bold green
+            metrics_parts = []
+            if numeric_metrics_result and numeric_metrics_result.cosine_similarity:
+                score = numeric_metrics_result.cosine_similarity.score
+                metrics_parts.append(f"cosine={score:.3f}")
+            if numeric_metrics_result and numeric_metrics_result.bert_score:
+                f1 = numeric_metrics_result.bert_score.f1
+                metrics_parts.append(f"bert_f1={f1:.3f}")
+            if content_judge_result:
+                metrics_parts.append(f"content={content_judge_result.score}/5")
+            if style_judge_result:
+                metrics_parts.append(f"style={style_judge_result.score}/5")
+
+            if metrics_parts:
+                metrics_str = " ".join(metrics_parts)
+                logger.info(f"<green><bold>✅ Results: {metrics_str}</bold></green>")
+            logger.info("")  # Empty line for visual separation
 
             # AICODE-NOTE: Return summary of results
             return {
@@ -380,7 +440,9 @@ class EvaluationRunner:
                     case_name = case_dir.name
                     output_case_path = output_base / author_name / case_name
 
-                    logger.info(f"Processing {author_name}/{case_name}")
+                    # AICODE-NOTE: Bold header for each case with emoji
+                    logger.info(f"<bold>📋 Processing {author_name}/{case_name}</bold>")
+                    logger.info("")  # Empty line for visual separation
 
                     # AICODE-NOTE: Evaluate case (with error recovery)
                     result = self._evaluate_case(
