@@ -17,6 +17,7 @@ python = "^3.11"
 # AICODE-NOTE: LLM API clients for neutralization and judging
 openai = "^1.0.0"
 anthropic = "^0.18.0"
+httpx = "^0.24.0"  # HTTP client with proxy support for API calls
 
 # AICODE-NOTE: Configuration and data handling
 pyyaml = "^6.0"

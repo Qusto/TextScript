@@ -9,13 +9,14 @@ dataset_path: "./eval_dataset/"
 output_path: "./eval_results/"
 
 # Model for article generation (Ugly Script)
-# AICODE-NOTE: Uses OpenRouter format for model selection
-# AICODE-NOTE: Can be different from neutralizer_model_id
-generation_model_id: "meta-llama/llama-3-8b-instruct"
+# AICODE-NOTE: Uses OpenRouter format (no "openai/" prefix)
+# AICODE-NOTE: Can be different from judge_model_id
+generation_model_id: "gpt-4o-mini"
 
 # Model for LLM-as-Judge evaluation
-# AICODE-NOTE: GPT-4o recommended for high-quality judgments
-judge_model_id: "openai/gpt-4o"
+# AICODE-NOTE: GPT-4o via OpenRouter (no "openai/" prefix)
+# AICODE-NOTE: Recommended for high-quality judgments
+judge_model_id: "gpt-4o"
 
 # Numeric metrics configuration
 # AICODE-NOTE: Set to false to disable expensive metrics (e.g., BERTScore on CPU)

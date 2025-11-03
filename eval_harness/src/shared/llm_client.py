@@ -11,6 +11,7 @@ import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+import httpx
 from anthropic import Anthropic
 from loguru import logger
 from openai import OpenAI
@@ -43,6 +44,7 @@ class LLMClient:
 
         AICODE-NOTE: T012 - Implements initialization with .env loading
         AICODE-NOTE: Uses python-dotenv to load OPENAI_API_KEY
+        AICODE-NOTE: Supports HTTP_PROXY for proxied API requests
         """
         # AICODE-NOTE: Load environment variables from .env
         if env_path is None:
@@ -67,6 +69,18 @@ class LLMClient:
         self.timeout = timeout
         self.max_retries = max_retries
 
+        # AICODE-NOTE: Get HTTP proxy from environment if set
+        self.http_proxy = os.getenv("HTTP_PROXY")
+        if self.http_proxy:
+            logger.info(f"HTTP proxy configured: {self.http_proxy}")
+            # AICODE-NOTE: Create httpx client with proxy for all API calls
+            self._http_client = httpx.Client(
+                proxy=self.http_proxy,
+                timeout=timeout
+            )
+        else:
+            self._http_client = None
+
         # AICODE-NOTE: Initialize provider clients lazily (only when needed)
         self._openrouter_client: Optional[OpenAI] = None
         self._openai_client: Optional[OpenAI] = None
@@ -77,33 +91,60 @@ class LLMClient:
         )
 
     def _get_openrouter_client(self) -> OpenAI:
-        """Get or create OpenRouter client."""
+        """Get or create OpenRouter client.
+
+        AICODE-NOTE: Uses HTTP proxy if configured via HTTP_PROXY env var
+        """
         if self._openrouter_client is None:
-            self._openrouter_client = OpenAI(
-                base_url="https://openrouter.ai/api/v1",
-                api_key=self.api_key,
-                timeout=self.timeout
-            )
+            kwargs = {
+                "base_url": "https://openrouter.ai/api/v1",
+                "api_key": self.api_key,
+                "timeout": self.timeout
+            }
+
+            # AICODE-NOTE: Add proxy support if configured
+            if self._http_client:
+                kwargs["http_client"] = self._http_client
+
+            self._openrouter_client = OpenAI(**kwargs)
             logger.debug("Initialized OpenRouter client")
         return self._openrouter_client
 
     def _get_openai_client(self) -> OpenAI:
-        """Get or create OpenAI direct client."""
+        """Get or create OpenAI direct client.
+
+        AICODE-NOTE: Uses HTTP proxy if configured via HTTP_PROXY env var
+        """
         if self._openai_client is None:
-            self._openai_client = OpenAI(
-                api_key=self.api_key,
-                timeout=self.timeout
-            )
+            kwargs = {
+                "api_key": self.api_key,
+                "timeout": self.timeout
+            }
+
+            # AICODE-NOTE: Add proxy support if configured
+            if self._http_client:
+                kwargs["http_client"] = self._http_client
+
+            self._openai_client = OpenAI(**kwargs)
             logger.debug("Initialized OpenAI client")
         return self._openai_client
 
     def _get_anthropic_client(self) -> Anthropic:
-        """Get or create Anthropic client."""
+        """Get or create Anthropic client.
+
+        AICODE-NOTE: Uses HTTP proxy if configured via HTTP_PROXY env var
+        """
         if self._anthropic_client is None:
-            self._anthropic_client = Anthropic(
-                api_key=self.api_key,
-                timeout=self.timeout
-            )
+            kwargs = {
+                "api_key": self.api_key,
+                "timeout": self.timeout
+            }
+
+            # AICODE-NOTE: Add proxy support if configured
+            if self._http_client:
+                kwargs["http_client"] = self._http_client
+
+            self._anthropic_client = Anthropic(**kwargs)
             logger.debug("Initialized Anthropic client")
         return self._anthropic_client
 
