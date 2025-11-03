@@ -33,6 +33,9 @@ pandas = "^2.0.0"  # Aggregation and CSV reports
 # AICODE-NOTE: CLI utilities and logging
 tqdm = "^4.65.0"   # Progress indicators
 loguru = "^0.7.0"  # Structured logging (reuses backend dependency)
+datasets = "^4.3.0"
+requests = "^2.32.5"
+beautifulsoup4 = "^4.14.2"
 
 [tool.poetry.group.dev.dependencies]
 # AICODE-NOTE: Testing framework matching backend conventions

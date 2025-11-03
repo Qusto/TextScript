@@ -1,0 +1,26 @@
+# Perfect test configuration - numeric metrics only (no API calls)
+# Uses ground truth as "generated" output for baseline calibration
+
+dataset_path: "./eval_dataset/"
+output_path: "./eval_results/"
+
+# Model IDs (not used in perfect test mode for generation)
+generation_model_id: "openai/gpt-4o-mini"
+judge_model_id: "openai/gpt-4o"
+
+# Enable ONLY numeric metrics (no API calls needed)
+metrics_numeric:
+  cosine_similarity: true
+  bert_score: true
+
+# Disable LLM judges (require API access)
+metrics_judge:
+  content_judge: false
+  style_judge: false
+
+# Embedding model for cosine similarity
+embedding_model: "all-MiniLM-L6-v2"
+
+# API settings (not used in perfect test)
+llm_timeout: 120
+max_retries: 3

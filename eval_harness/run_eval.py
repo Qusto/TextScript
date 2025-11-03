@@ -87,11 +87,12 @@ def load_config(config_path: Path) -> EvalConfig:
         raise ValueError(f"Invalid configuration: {e}") from e
 
 
-def initialize_components(config: EvalConfig) -> tuple:
+def initialize_components(config: EvalConfig, perfect_test: bool = False) -> tuple:
     """Initialize all evaluation components.
 
     Args:
         config: Validated EvalConfig
+        perfect_test: Skip adapter if True (perfect test mode)
 
     Returns:
         Tuple of (runner, aggregator) ready for evaluation
@@ -102,6 +103,7 @@ def initialize_components(config: EvalConfig) -> tuple:
 
     AICODE-NOTE: Creates all components based on config
     AICODE-NOTE: Conditionally creates metric computers based on enabled flags
+    AICODE-NOTE: T117 - Skip adapter in perfect test (no generation needed)
     """
     logger.info("Initializing evaluation components...")
 
@@ -111,11 +113,16 @@ def initialize_components(config: EvalConfig) -> tuple:
         logger.success("LLM client initialized")
 
         # AICODE-NOTE: Initialize UglyScriptAdapter for article generation
-        adapter = UglyScriptAdapter(
-            llm_client=llm_client,
-            generation_model_id=config.generation_model_id
-        )
-        logger.success(f"Generation adapter initialized (model={config.generation_model_id})")
+        # AICODE-NOTE: T117 - Skip in perfect test mode (not needed)
+        adapter = None
+        if not perfect_test:
+            adapter = UglyScriptAdapter(
+                llm_client=llm_client,
+                generation_model_id=config.generation_model_id
+            )
+            logger.success(f"Generation adapter initialized (model={config.generation_model_id})")
+        else:
+            logger.info("⚠️  Skipping adapter (perfect test mode - no generation)")
 
         # AICODE-NOTE: Initialize numeric metrics if any enabled
         numeric_metrics = None
@@ -234,7 +241,7 @@ Examples:
 
         # AICODE-NOTE: Step 3 - Initialize components
         try:
-            runner, aggregator = initialize_components(config)
+            runner, aggregator = initialize_components(config, perfect_test=args.perfect_test)
         except ImportError as e:
             logger.error(f"Integration error: {e}")
             sys.exit(EXIT_INTEGRATION_ERROR)
