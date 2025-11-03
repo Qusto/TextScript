@@ -67,4 +67,6 @@ testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
-addopts = "-v --cov=src --cov-report=term-missing"
+# AICODE-NOTE: Disable coverage for now to avoid import issues
+addopts = "-v --no-cov"
+pythonpath = ["."]

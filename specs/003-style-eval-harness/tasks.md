@@ -56,30 +56,30 @@ This is a standalone Python CLI project:
 
 ### Shared Utilities & Configuration Models
 
-- [ ] T010 [P] Create eval_harness/src/shared/__init__.py (AICODE-NOTE: Shared utilities package)
-- [ ] T011 [P] Create eval_harness/src/shared/llm_client.py with unified LLM API client class (AICODE-NOTE: T011 - Reuses .env OPENAI_API_KEY, supports OpenRouter/OpenAI/Anthropic via model ID prefix)
-- [ ] T012 Implement LLMClient.__init__() in llm_client.py with API key loading from .env and timeout/retry config (AICODE-NOTE: Exponential backoff: 1s, 2s, 4s)
-- [ ] T013 Implement LLMClient.generate() in llm_client.py with retry logic for rate limits/timeouts (AICODE-NOTE: Retry on 429, 5xx; Don't retry on 401, 400)
-- [ ] T014 Implement LLMClient._parse_json_response() in llm_client.py with JSON validation (AICODE-NOTE: Handles Claude/GPT JSON formatting differences)
-- [ ] T015 [P] Create eval_harness/src/shared/file_utils.py with helper functions for reading/writing UTF-8 text files (AICODE-NOTE: T015 - Handles encoding errors gracefully)
-- [ ] T016 [P] Implement ensure_directory() in file_utils.py with path creation and validation (AICODE-NOTE: Creates parent directories if missing)
-- [ ] T017 [P] Implement truncate_text() in file_utils.py for token limit truncation at sentence boundaries (AICODE-NOTE: Approximation: 1 token ≈ 4 chars)
+- [X] T010 [P] Create eval_harness/src/shared/__init__.py (AICODE-NOTE: Shared utilities package)
+- [X] T011 [P] Create eval_harness/src/shared/llm_client.py with unified LLM API client class (AICODE-NOTE: T011 - Reuses .env OPENAI_API_KEY, supports OpenRouter/OpenAI/Anthropic via model ID prefix)
+- [X] T012 Implement LLMClient.__init__() in llm_client.py with API key loading from .env and timeout/retry config (AICODE-NOTE: Exponential backoff: 1s, 2s, 4s)
+- [X] T013 Implement LLMClient.generate() in llm_client.py with retry logic for rate limits/timeouts (AICODE-NOTE: Retry on 429, 5xx; Don't retry on 401, 400)
+- [X] T014 Implement LLMClient._parse_json_response() in llm_client.py with JSON validation (AICODE-NOTE: Handles Claude/GPT JSON formatting differences)
+- [X] T015 [P] Create eval_harness/src/shared/file_utils.py with helper functions for reading/writing UTF-8 text files (AICODE-NOTE: T015 - Handles encoding errors gracefully)
+- [X] T016 [P] Implement ensure_directory() in file_utils.py with path creation and validation (AICODE-NOTE: Creates parent directories if missing)
+- [X] T017 [P] Implement truncate_text() in file_utils.py for token limit truncation at sentence boundaries (AICODE-NOTE: Approximation: 1 token ≈ 4 chars)
 
 ### Configuration Models (Pydantic)
 
-- [ ] T018 [P] Create eval_harness/src/dataset_builder/__init__.py (AICODE-NOTE: Dataset builder package)
-- [ ] T019 [P] Create eval_harness/src/dataset_builder/config.py with DatasetConfig Pydantic model from data-model.md (AICODE-NOTE: T019 - Validates m_style_texts + k_test_cases <= min_texts_per_author)
-- [ ] T020 [P] Add TopicData Pydantic model to dataset_builder/config.py with topic and theses fields (AICODE-NOTE: Validates 5-10 theses, max 100 char topic)
-- [ ] T021 [P] Create eval_harness/src/evaluator/__init__.py (AICODE-NOTE: Evaluator package)
-- [ ] T022 [P] Create eval_harness/src/evaluator/config.py with EvalConfig Pydantic model from data-model.md (AICODE-NOTE: T022 - Validates at least one metric enabled)
-- [ ] T023 [P] Add NumericMetrics, JudgeResult Pydantic models to evaluator/config.py from data-model.md (AICODE-NOTE: Score bounds validation: [0.0-1.0] for numeric, [1-5] for judges)
+- [X] T018 [P] Create eval_harness/src/dataset_builder/__init__.py (AICODE-NOTE: Dataset builder package)
+- [X] T019 [P] Create eval_harness/src/dataset_builder/config.py with DatasetConfig Pydantic model from data-model.md (AICODE-NOTE: T019 - Validates m_style_texts + k_test_cases <= min_texts_per_author)
+- [X] T020 [P] Add TopicData Pydantic model to dataset_builder/config.py with topic and theses fields (AICODE-NOTE: Validates 5-10 theses, max 100 char topic)
+- [X] T021 [P] Create eval_harness/src/evaluator/__init__.py (AICODE-NOTE: Evaluator package)
+- [X] T022 [P] Create eval_harness/src/evaluator/config.py with EvalConfig Pydantic model from data-model.md (AICODE-NOTE: T022 - Validates at least one metric enabled)
+- [X] T023 [P] Add NumericMetrics, JudgeResult Pydantic models to evaluator/config.py from data-model.md (AICODE-NOTE: Score bounds validation: [0.0-1.0] for numeric, [1-5] for judges)
 
 ### Test Fixtures
 
-- [ ] T024 [P] Create eval_harness/tests/fixtures/__init__.py (AICODE-NOTE: Shared test fixtures)
-- [ ] T025 [P] Create eval_harness/tests/fixtures/sample_corpus/ with 2 sample authors (3 texts each) for testing (AICODE-NOTE: Minimal corpus for fast tests)
-- [ ] T026 [P] Create pytest fixture in eval_harness/tests/conftest.py for mock LLM client (AICODE-NOTE: Prevents real API calls in unit tests)
-- [ ] T027 [P] Create pytest fixture in eval_harness/tests/conftest.py for temporary directories (AICODE-NOTE: Auto-cleanup with tmp_path)
+- [X] T024 [P] Create eval_harness/tests/fixtures/__init__.py (AICODE-NOTE: Shared test fixtures)
+- [X] T025 [P] Create eval_harness/tests/fixtures/sample_corpus/ with 2 sample authors (3 texts each) for testing (AICODE-NOTE: Minimal corpus for fast tests)
+- [X] T026 [P] Create pytest fixture in eval_harness/tests/conftest.py for mock LLM client (AICODE-NOTE: Prevents real API calls in unit tests)
+- [X] T027 [P] Create pytest fixture in eval_harness/tests/conftest.py for temporary directories (AICODE-NOTE: Auto-cleanup with tmp_path)
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
