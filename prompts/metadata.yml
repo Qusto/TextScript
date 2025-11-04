@@ -1,0 +1,14 @@
+# Prompt Versioning Metadata
+# Tracks versions of article_generation.txt for eval_harness testing
+
+versions:
+  - version: "v1.0"
+    date: "2025-11-04"
+    description: "Initial baseline version - focus on unconscious patterns (70%), semi-conscious (20%), conscious (10%)"
+    file: "versions/v1.0.txt"
+    notes: "Baseline prompt with style calibration and structural guidelines"
+
+current:
+  version: "v1.0"
+  file: "article_generation.txt"
+  description: "Active prompt used for article generation"
