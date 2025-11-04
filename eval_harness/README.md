@@ -63,10 +63,12 @@ output_path: "./eval_dataset/"
 min_texts_per_author: 10
 m_style_texts: 5
 k_test_cases: 5
-neutralizer_model_id: "anthropic/claude-3-5-sonnet-20240620"
-max_tokens_for_neutralizer: 4000
+neutralizer_model_id: "anthropic/claude-3-5-sonnet-20240620"  # ⚠️ NOT IMPLEMENTED YET
+max_tokens_for_neutralizer: 4000  # ⚠️ NOT IMPLEMENTED YET
 random_seed: 42
 ```
+
+**⚠️ Note on Neutralizer**: The topic neutralization pipeline is **not yet implemented**. Currently, `topic.json` contains generic placeholders like "Literary work 1 by Charles Dickens". See `TODO_NEUTRALIZER.md` for implementation plan to extract real neutral topics from ground truth articles.
 
 Edit `my_eval.yml` to configure evaluation:
 
