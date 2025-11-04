@@ -63,6 +63,7 @@ class ResultAggregator:
         metrics_data = {
             "cosine_similarity": [],
             "bert_f1": [],
+            "char_ngrams": [],
             "content_score": [],
             "style_score": []
         }
@@ -84,6 +85,12 @@ class ResultAggregator:
                 if numeric_data.get("bert_score"):
                     metrics_data["bert_f1"].append(
                         numeric_data["bert_score"]["f1"]
+                    )
+
+                # AICODE-NOTE: Extract character n-grams
+                if numeric_data.get("char_ngrams"):
+                    metrics_data["char_ngrams"].append(
+                        numeric_data["char_ngrams"]["score"]
                     )
 
             # AICODE-NOTE: Load content judge
@@ -158,6 +165,7 @@ class ResultAggregator:
                     "case": case_dir.name,
                     "cosine_sim": "",
                     "bert_f1": "",
+                    "char_ngrams": "",
                     "content_score": "",
                     "style_score": ""
                 }
@@ -173,6 +181,9 @@ class ResultAggregator:
 
                     if numeric_data.get("bert_score"):
                         row["bert_f1"] = f"{numeric_data['bert_score']['f1']:.4f}"
+
+                    if numeric_data.get("char_ngrams"):
+                        row["char_ngrams"] = f"{numeric_data['char_ngrams']['score']:.4f}"
 
                 content_file = case_dir / "metrics_judge_content.json"
                 if content_file.exists():
@@ -201,6 +212,7 @@ class ResultAggregator:
             "case": "",
             "cosine_sim": f"{summary['mean_metrics'].get('cosine_similarity', 0):.4f}" if summary['mean_metrics'].get('cosine_similarity') else "",
             "bert_f1": f"{summary['mean_metrics'].get('bert_f1', 0):.4f}" if summary['mean_metrics'].get('bert_f1') else "",
+            "char_ngrams": f"{summary['mean_metrics'].get('char_ngrams', 0):.4f}" if summary['mean_metrics'].get('char_ngrams') else "",
             "content_score": f"{summary['mean_metrics'].get('content_score', 0):.2f}" if summary['mean_metrics'].get('content_score') else "",
             "style_score": f"{summary['mean_metrics'].get('style_score', 0):.2f}" if summary['mean_metrics'].get('style_score') else ""
         }
@@ -210,6 +222,7 @@ class ResultAggregator:
             "case": "",
             "cosine_sim": f"{summary['median_metrics'].get('cosine_similarity', 0):.4f}" if summary['median_metrics'].get('cosine_similarity') else "",
             "bert_f1": f"{summary['median_metrics'].get('bert_f1', 0):.4f}" if summary['median_metrics'].get('bert_f1') else "",
+            "char_ngrams": f"{summary['median_metrics'].get('char_ngrams', 0):.4f}" if summary['median_metrics'].get('char_ngrams') else "",
             "content_score": f"{summary['median_metrics'].get('content_score', 0):.2f}" if summary['median_metrics'].get('content_score') else "",
             "style_score": f"{summary['median_metrics'].get('style_score', 0):.2f}" if summary['median_metrics'].get('style_score') else ""
         }
@@ -219,6 +232,7 @@ class ResultAggregator:
             "case": "",
             "cosine_sim": f"{summary['std_metrics'].get('cosine_similarity', 0):.4f}" if summary['std_metrics'].get('cosine_similarity') else "",
             "bert_f1": f"{summary['std_metrics'].get('bert_f1', 0):.4f}" if summary['std_metrics'].get('bert_f1') else "",
+            "char_ngrams": f"{summary['std_metrics'].get('char_ngrams', 0):.4f}" if summary['std_metrics'].get('char_ngrams') else "",
             "content_score": f"{summary['std_metrics'].get('content_score', 0):.2f}" if summary['std_metrics'].get('content_score') else "",
             "style_score": f"{summary['std_metrics'].get('style_score', 0):.2f}" if summary['std_metrics'].get('style_score') else ""
         }
@@ -346,6 +360,7 @@ class ResultAggregator:
                 "metrics": {
                     "cosine_similarity": [],
                     "bert_f1": [],
+                    "char_ngrams": [],
                     "content_score": [],
                     "style_score": []
                 }
@@ -373,6 +388,11 @@ class ResultAggregator:
                             numeric["bert_score"]["f1"]
                         )
 
+                    if numeric.get("char_ngrams"):
+                        author_data[author_name]["metrics"]["char_ngrams"].append(
+                            numeric["char_ngrams"]["score"]
+                        )
+
                 content_file = case_dir / "metrics_judge_content.json"
                 if content_file.exists():
                     with open(content_file, 'r') as f:
@@ -397,7 +417,7 @@ class ResultAggregator:
             for metric_name, values in data["metrics"].items():
                 if values:
                     avg = mean(values)
-                    if metric_name in ["cosine_similarity", "bert_f1"]:
+                    if metric_name in ["cosine_similarity", "bert_f1", "char_ngrams"]:
                         md_lines.append(f"- **{metric_name.replace('_', ' ').title()}**: {avg:.3f}")
                     else:
                         md_lines.append(f"- **{metric_name.replace('_', ' ').title()}**: {avg:.1f}/5.0")

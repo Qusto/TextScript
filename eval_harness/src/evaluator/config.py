@@ -74,11 +74,38 @@ class BERTScoreResult(BaseModel):
     )
 
 
+class CharNgramsResult(BaseModel):
+    """Character n-grams similarity result for stylometry.
+
+    AICODE-NOTE: Character n-grams capture writing style at character level
+    AICODE-NOTE: More robust for authorship attribution than word-level
+    AICODE-NOTE: Combines n-grams of length 2, 3, 4 for better coverage
+    """
+
+    score: float = Field(
+        ge=0.0,
+        le=1.0,
+        description="Character n-grams similarity (0.0-1.0)"
+    )
+
+    ngram_range: tuple[int, int] = Field(
+        description="N-gram range used (e.g., (2, 4) for 2-4 character n-grams)"
+    )
+
+    model: str = Field(
+        description="Method used (e.g., 'TF-IDF cosine')"
+    )
+
+    computed_at: datetime = Field(
+        description="Timestamp when metric was computed"
+    )
+
+
 class NumericMetrics(BaseModel):
     """All numeric metrics for a test case.
 
     AICODE-NOTE: T023 - Container for numeric similarity metrics
-    AICODE-NOTE: Both metrics are optional (can be disabled in config)
+    AICODE-NOTE: All metrics are optional (can be disabled in config)
     AICODE-NOTE: Saved as metrics_numeric.json in eval results
     """
 
@@ -90,6 +117,11 @@ class NumericMetrics(BaseModel):
     bert_score: Optional[BERTScoreResult] = Field(
         default=None,
         description="BERTScore result (optional)"
+    )
+
+    char_ngrams: Optional[CharNgramsResult] = Field(
+        default=None,
+        description="Character n-grams similarity result (optional)"
     )
 
 
@@ -156,7 +188,7 @@ class EvalConfig(BaseModel):
     )
 
     metrics_numeric: Dict[str, bool] = Field(
-        description="Numeric metrics to compute (cosine_similarity, bert_score)"
+        description="Numeric metrics to compute (cosine_similarity, bert_score, char_ngrams)"
     )
 
     metrics_judge: Dict[str, bool] = Field(

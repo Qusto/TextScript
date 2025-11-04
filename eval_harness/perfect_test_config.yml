@@ -12,6 +12,7 @@ judge_model_id: "openai/gpt-4o"
 metrics_numeric:
   cosine_similarity: true
   bert_score: true
+  char_ngrams: true  # Character n-grams for stylometry
 
 # Disable LLM judges (require API access)
 metrics_judge:
@@ -19,7 +20,8 @@ metrics_judge:
   style_judge: false
 
 # Embedding model for cosine similarity
-embedding_model: "all-MiniLM-L6-v2"
+# CHANGED: RoBERTa for better authorship attribution (was all-MiniLM-L6-v2)
+embedding_model: "sentence-transformers/all-roberta-large-v1"
 
 # API settings (not used in perfect test)
 llm_timeout: 120

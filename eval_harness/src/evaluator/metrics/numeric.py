@@ -13,7 +13,8 @@ from sentence_transformers import SentenceTransformer
 
 from src.evaluator.config import (
     CosineSimilarityResult,
-    BERTScoreResult
+    BERTScoreResult,
+    CharNgramsResult
 )
 
 
@@ -177,10 +178,15 @@ class NumericMetrics:
             import bert_score
 
             # AICODE-NOTE: bert_score.score returns (P, R, F1) as PyTorch tensors
+            # AICODE-NOTE: idf=True weights rare words (important for style!)
+            # AICODE-NOTE: rescale_with_baseline=True normalizes to natural range [0,1]
             P, R, F1 = bert_score.score(
                 [generated_text],
                 [ground_truth_text],
                 model_type=self.bert_model_name,
+                idf=True,  # IDF weighting for rare words
+                rescale_with_baseline=True,  # Normalize to [0,1] range
+                lang="en",  # Use English baseline
                 verbose=False
             )
 
@@ -204,4 +210,78 @@ class NumericMetrics:
         except Exception as e:
             # AICODE-NOTE: T071 - Error handling logs warning, returns None
             logger.exception(f"Error computing BERTScore: {e}")
+            return None
+
+    def compute_char_ngrams(
+        self,
+        generated_text: str,
+        ground_truth_text: str,
+        ngram_range: tuple[int, int] = (2, 4)
+    ) -> Optional[CharNgramsResult]:
+        """Compute character n-grams similarity for stylometry.
+
+        Args:
+            generated_text: Generated article text
+            ground_truth_text: Ground truth article text
+            ngram_range: Range of n-grams (default: 2-4 character n-grams)
+
+        Returns:
+            CharNgramsResult with similarity score [0.0-1.0], or None on error
+
+        AICODE-NOTE: Character n-grams capture writing style at character level
+        AICODE-NOTE: Uses TF-IDF weighting + cosine similarity
+        AICODE-NOTE: More robust for authorship than word-level features
+        """
+        # AICODE-NOTE: Validate inputs
+        if not generated_text or not generated_text.strip():
+            logger.warning("Cannot compute char n-grams: generated text is empty")
+            return None
+
+        if not ground_truth_text or not ground_truth_text.strip():
+            logger.warning("Cannot compute char n-grams: ground truth is empty")
+            return None
+
+        if len(generated_text.strip()) < 10 or len(ground_truth_text.strip()) < 10:
+            logger.warning(
+                "Cannot compute char n-grams: texts too short "
+                f"(gen={len(generated_text)}, gt={len(ground_truth_text)})"
+            )
+            return None
+
+        try:
+            logger.debug(f"Computing character n-grams similarity (range={ngram_range})...")
+
+            # AICODE-NOTE: Import sklearn here (lazy import)
+            from sklearn.feature_extraction.text import TfidfVectorizer
+            from sklearn.metrics.pairwise import cosine_similarity
+
+            # AICODE-NOTE: Create TF-IDF vectorizer for character n-grams
+            vectorizer = TfidfVectorizer(
+                analyzer='char',  # Character-level (not word-level)
+                ngram_range=ngram_range,  # 2-4 character n-grams
+                max_features=5000,  # Limit for performance
+                lowercase=True  # Case-insensitive
+            )
+
+            # AICODE-NOTE: Fit and transform both texts
+            tfidf_matrix = vectorizer.fit_transform([generated_text, ground_truth_text])
+
+            # AICODE-NOTE: Compute cosine similarity between TF-IDF vectors
+            similarity = cosine_similarity(tfidf_matrix[0:1], tfidf_matrix[1:2])[0][0]
+
+            # AICODE-NOTE: Clamp to [0.0, 1.0] range (should already be there)
+            similarity = max(0.0, min(1.0, float(similarity)))
+
+            logger.success(f"Character n-grams similarity computed: {similarity:.3f}")
+
+            return CharNgramsResult(
+                score=similarity,
+                ngram_range=ngram_range,
+                model="TF-IDF cosine",
+                computed_at=datetime.now()
+            )
+
+        except Exception as e:
+            # AICODE-NOTE: Error handling logs warning, returns None
+            logger.exception(f"Error computing character n-grams: {e}")
             return None

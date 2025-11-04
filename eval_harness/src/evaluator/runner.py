@@ -271,6 +271,7 @@ class EvaluationRunner:
             if self.numeric_metrics is not None:
                 cosine_result = None
                 bert_result = None
+                char_ngrams_result = None
 
                 # AICODE-NOTE: Compute cosine similarity if enabled
                 if self.config.metrics_numeric.get("cosine_similarity", False):
@@ -292,11 +293,22 @@ class EvaluationRunner:
                     except Exception as e:
                         logger.warning(f"BERTScore failed: {e}")
 
+                # AICODE-NOTE: Compute character n-grams if enabled
+                if self.config.metrics_numeric.get("char_ngrams", False):
+                    try:
+                        char_ngrams_result = self.numeric_metrics.compute_char_ngrams(
+                            generated_article,
+                            case_data["ground_truth_article"]
+                        )
+                    except Exception as e:
+                        logger.warning(f"Character n-grams failed: {e}")
+
                 # AICODE-NOTE: Create NumericMetrics object if any metric succeeded
-                if cosine_result or bert_result:
+                if cosine_result or bert_result or char_ngrams_result:
                     numeric_metrics_result = NumericMetrics(
                         cosine_similarity=cosine_result,
-                        bert_score=bert_result
+                        bert_score=bert_result,
+                        char_ngrams=char_ngrams_result
                     )
 
             # Judge evaluations
@@ -340,6 +352,9 @@ class EvaluationRunner:
             if numeric_metrics_result and numeric_metrics_result.bert_score:
                 f1 = numeric_metrics_result.bert_score.f1
                 metrics_parts.append(f"bert_f1={f1:.3f}")
+            if numeric_metrics_result and numeric_metrics_result.char_ngrams:
+                score = numeric_metrics_result.char_ngrams.score
+                metrics_parts.append(f"char_ngrams={score:.3f}")
             if content_judge_result:
                 metrics_parts.append(f"content={content_judge_result.score}/5")
             if style_judge_result:
