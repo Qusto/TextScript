@@ -216,14 +216,15 @@ class EvaluationRunner:
         Args:
             case_path: Path to test case directory
             output_path: Path to save results
-            perfect_test: If True, use ground truth as generated output (no generation)
+            perfect_test: If True, use source texts as generated output for author baseline
 
         Returns:
             Dict with evaluation results, or None on failure
 
         AICODE-NOTE: T082 - Implements full pipeline: load → generate → compute → save
         AICODE-NOTE: T086 - Error recovery to continue on failures
-        AICODE-NOTE: T117 - Perfect test mode support for baseline calibration
+        AICODE-NOTE: T117 - Perfect test mode: compares source texts vs ground truth
+        AICODE-NOTE: Perfect test measures author style consistency (same author, different works)
         AICODE-NOTE: Enhanced with colorful stage-based logging
         """
         try:
@@ -231,11 +232,14 @@ class EvaluationRunner:
             self._log_stage(1, 4, STAGE_ICONS["load"], "Loading test case")
             case_data = self._load_test_case(case_path)
 
-            # AICODE-NOTE: Stage 2 - Generate article OR use ground truth (perfect test mode)
+            # AICODE-NOTE: Stage 2 - Generate article OR use source texts (perfect test mode)
             if perfect_test:
-                self._log_stage(2, 4, STAGE_ICONS["generate"], "Using ground truth (perfect test)")
-                generated_article = case_data["ground_truth_article"]
-                logger.info(f"  <green>Using ground truth: {self._get_text_stats(generated_article)}</green>")
+                self._log_stage(2, 4, STAGE_ICONS["generate"], "Using source texts for author baseline")
+                generated_article = case_data["source_texts"]
+                logger.info(
+                    f"  <green>Comparing source texts {self._format_size(len(case_data['source_texts']))} "
+                    f"vs ground truth {self._format_size(len(case_data['ground_truth_article']))}</green>"
+                )
             else:
                 self._log_stage(2, 4, STAGE_ICONS["generate"], "Generating article")
                 start_time = time.time()
@@ -368,14 +372,14 @@ class EvaluationRunner:
 
         Args:
             author_filter: Optional author name to filter cases
-            perfect_test: If True, use ground truth as generated output
+            perfect_test: If True, use source texts for author baseline comparison
 
         Returns:
             Dict with summary of evaluation results
 
         AICODE-NOTE: T085 - Main loop with tqdm progress tracking per author
         AICODE-NOTE: Iterates all test cases, handles errors per case
-        AICODE-NOTE: T117 - Perfect test mode support
+        AICODE-NOTE: T117 - Perfect test: compares source vs ground truth (same author)
         """
         logger.info("Starting evaluation run...")
 

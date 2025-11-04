@@ -95,7 +95,23 @@ judge_model_id: "gpt-4o"            # Changed from "openai/gpt-4o"
 
 ### perfect_test_config.yml
 
-No changes needed - already uses numeric metrics only (no API calls).
+Perfect test mode compares source texts vs ground truth articles (both by the same author) to establish author style consistency baseline.
+
+**How it works:**
+- Uses `source_texts.txt` (e.g., "A Tale of Two Cities") as generated output
+- Compares against `ground_truth_article.txt` (e.g., "Hard Times")
+- Both texts are by the same author (Charles Dickens)
+- Measures author style consistency: **expected scores 0.75-0.90**
+
+**Purpose:**
+- ✅ Validates that metrics can detect same-author texts
+- ✅ Establishes baseline for author identification
+- ✅ No API calls required (numeric metrics only)
+
+**Expected results:**
+- Cosine Similarity: **0.75-0.90** (high semantic similarity)
+- BERTScore F1: **0.70-0.85** (token-level similarity)
+- NOT 1.0 (different content, same style)
 
 ## Troubleshooting
 

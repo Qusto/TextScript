@@ -1,0 +1,17 @@
+# Test configuration for StyleGuard dataset builder
+# Minimal settings for quick testing
+
+corpus_path: "./test_corpus/"
+output_path: "./test_eval_dataset/"
+
+# Minimal requirements - use all 10 texts per author
+min_texts_per_author: 10
+m_style_texts: 3        # 3 texts for style reference
+k_test_cases: 2         # Only 2 test cases per author
+
+# Use smaller, faster model for testing
+neutralizer_model_id: "openai/gpt-4o-mini"
+max_tokens_for_neutralizer: 2000  # Reduced for faster processing
+
+# Fixed seed for reproducibility
+random_seed: 42

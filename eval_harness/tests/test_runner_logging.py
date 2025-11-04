@@ -274,6 +274,6 @@ class TestPerfectTestMode:
         # Get captured log output
         log_output = capture_loguru.getvalue()
 
-        # Check stage 2 message mentions perfect test
+        # Check stage 2 message mentions source texts (author baseline)
         assert "[2/4]" in log_output, "Stage 2 not logged"
-        assert "perfect test" in log_output.lower(), "Perfect test not mentioned"
+        assert "source" in log_output.lower(), "Source texts not mentioned"

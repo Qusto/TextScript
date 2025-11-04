@@ -1,0 +1,17 @@
+# Real corpus configuration for StyleGuard dataset builder
+# Uses downloaded Project Gutenberg texts
+
+corpus_path: "./corpus/"
+output_path: "./eval_dataset/"
+
+# Real corpus has 10 texts per author
+min_texts_per_author: 10
+m_style_texts: 5        # 5 texts for style reference
+k_test_cases: 5         # 5 test cases per author
+
+# OpenRouter API - use cheaper, faster model for testing
+neutralizer_model_id: "openai/gpt-4o-mini"
+max_tokens_for_neutralizer: 4000
+
+# Fixed seed for reproducibility
+random_seed: 42
