@@ -192,11 +192,96 @@ poetry run python run_eval.py --author "mark_twain" -v
 - Combine with other flags: `--author "mark_twain" --verbose --config custom.yml`
 - Summary statistics will reflect only the filtered author's cases
 
+### Test Modes and Prompt Versioning (NEW)
+
+StyleGuard now supports test mode selection and prompt versioning for systematic iteration:
+
+#### Test Mode 1: Perfect Test (Author Baseline)
+
+Establishes author style baseline by comparing different works by the same author:
+
+```bash
+# New syntax (recommended)
+poetry run python run_eval.py --test-mode perfect -v
+
+# Legacy syntax (still works)
+poetry run python run_eval.py --perfect-test -v
+```
+
+**What it does:**
+- Uses `source_texts.txt` as generated output (no LLM generation)
+- Compares against `ground_truth_article.txt` (both by same author)
+- Measures author style consistency: expected char_ngrams ~0.99
+
+**Expected results:**
+- Char N-grams: 0.986-0.994 (same author style)
+- Cosine Similarity: 0.40-0.60 (different content, same style)
+
+#### Test Mode 2: Generation Test with Prompt Versioning
+
+Tests actual article generation with specific prompt version:
+
+```bash
+# Use current prompt (auto-detected from metadata.yml)
+poetry run python run_eval.py --test-mode generation -v
+
+# Use specific prompt version
+poetry run python run_eval.py --test-mode generation --prompt-version v1.0 -v
+
+# Short form (generation is default mode)
+poetry run python run_eval.py --prompt-version v1.0 -v
+```
+
+**Prompt versioning structure:**
+```
+../../TextScript/prompts/
+├── article_generation.txt       # Current version
+├── versions/
+│   ├── v1.0.txt                 # Baseline
+│   ├── v1.1.txt                 # Iteration 1
+│   └── v2.0.txt                 # Major change
+├── metadata.yml                  # Version tracking
+└── CHANGELOG.md                  # Change history
+```
+
+#### Run Tracking and Comparison
+
+Every test run generates metadata files:
+
+```bash
+eval_results/
+├── 20251104_135314/
+│   ├── _RUN_METADATA.md         # Run configuration and results
+│   ├── _RUN_METADATA.json       # Programmatic access
+│   ├── _SUMMARY.md
+│   └── _SUMMARY.csv
+└── RUNS_COMPARISON.md           # Last 20 runs comparison table
+```
+
+**View runs comparison:**
+```bash
+cat eval_results/RUNS_COMPARISON.md
+```
+
+**Example output:**
+```markdown
+| Run ID | Mode | Prompt Ver | Gen Model | Cos Sim | Char N-grams |
+|--------|------|------------|-----------|---------|--------------|
+| 20251104_135314 | perf | - | - | 0.527 | 0.990 |
+| 20251104_120000 | gene | v1.0 | gpt-4o-mini | 0.450 | 0.850 |
+```
+
 ### Comparing Two Model/Prompt Versions
 
 ```bash
-# Run 1: Original prompt
-poetry run python run_eval.py --config eval_v1.yml
+# Run 1: Original prompt (v1.0)
+poetry run python run_eval.py --prompt-version v1.0 -v
+
+# Run 2: New prompt (v1.1)
+poetry run python run_eval.py --prompt-version v1.1 -v
+
+# Compare results
+cat eval_results/RUNS_COMPARISON.md
 # Output: eval_results/20251103_100000/
 
 # Run 2: Updated prompt
