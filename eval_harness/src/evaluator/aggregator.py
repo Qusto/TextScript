@@ -9,8 +9,11 @@ import json
 from pathlib import Path
 from typing import Dict, List, Any, Optional
 from statistics import mean, median, stdev
+from datetime import datetime
 
 from loguru import logger
+
+from src.evaluator.config import TestRunMetadata
 
 
 class ResultAggregator:
@@ -429,3 +432,292 @@ class ResultAggregator:
         md_file.write_text("\n".join(md_lines), encoding="utf-8")
 
         logger.success(f"Saved _SUMMARY.md: {md_file}")
+
+
+# AICODE-NOTE: Standalone functions for test run metadata generation
+# AICODE-NOTE: These are not part of ResultAggregator class for easier testing
+
+
+def load_run_metadata_from_dir(results_dir: Path) -> Optional[TestRunMetadata]:
+    """Load test run metadata from results directory.
+
+    Args:
+        results_dir: Path to results directory
+
+    Returns:
+        TestRunMetadata object or None if not found
+
+    AICODE-NOTE: Helper for loading metadata from _RUN_METADATA.json
+    """
+    metadata_file = results_dir / "_RUN_METADATA.json"
+    if not metadata_file.exists():
+        return None
+
+    try:
+        with open(metadata_file, 'r') as f:
+            data = json.load(f)
+
+        # Convert timestamp string back to datetime
+        if isinstance(data.get("timestamp"), str):
+            data["timestamp"] = datetime.fromisoformat(data["timestamp"])
+
+        return TestRunMetadata(**data)
+    except Exception as e:
+        logger.warning(f"Failed to load metadata from {metadata_file}: {e}")
+        return None
+
+
+def generate_run_metadata_md(
+    output_dir: Path,
+    metadata: TestRunMetadata,
+    results: Dict[str, Any]
+) -> None:
+    """Generate _RUN_METADATA.md in results directory.
+
+    Args:
+        output_dir: Path to results directory
+        metadata: Test run metadata
+        results: Evaluation results dict with total_cases, successful_cases, failed_cases
+
+    AICODE-NOTE: Generates human-readable metadata report
+    AICODE-NOTE: Also saves JSON version for programmatic access
+    """
+    lines = [
+        "# Test Run Metadata",
+        "",
+        f"**Run ID**: {metadata.run_id}",
+        f"**Test Mode**: {metadata.test_mode}",
+        f"**Timestamp**: {metadata.timestamp.strftime('%Y-%m-%d %H:%M:%S')}",
+        "",
+        "## Prompt Configuration",
+        ""
+    ]
+
+    if metadata.test_mode == "generation":
+        lines.extend([
+            f"- **Prompt Version**: {metadata.prompt_version}",
+            f"- **Prompt Hash**: {metadata.prompt_hash}",
+        ])
+    else:
+        lines.append("- **Prompt Version**: N/A (perfect test mode)")
+
+    lines.extend([
+        "",
+        "## Model Configuration",
+        "",
+        f"- **Generation Model**: {metadata.generation_model_id}",
+        f"- **Judge Model**: {metadata.judge_model_id}",
+        f"- **Embedding Model**: {metadata.embedding_model}",
+        "",
+        "## Results Summary",
+        "",
+        f"- **Total Cases**: {results['total_cases']}",
+        f"- **Successful**: {results['successful_cases']}",
+        f"- **Failed**: {results['failed_cases']}",
+        "",
+        "## Metrics",
+        ""
+    ])
+
+    # Load summary and add metrics
+    summary_json = output_dir / "summary.json"
+    if summary_json.exists():
+        try:
+            with open(summary_json, 'r') as f:
+                summary = json.load(f)
+
+            for metric_name, value in summary.get("mean_metrics", {}).items():
+                formatted_name = metric_name.replace('_', ' ').title()
+                if isinstance(value, float):
+                    lines.append(f"- **Mean {formatted_name}**: {value:.3f}")
+                else:
+                    lines.append(f"- **Mean {formatted_name}**: {value}")
+        except Exception as e:
+            logger.warning(f"Failed to load summary metrics: {e}")
+
+    # Write markdown file
+    md_file = output_dir / "_RUN_METADATA.md"
+    md_file.write_text("\n".join(lines), encoding="utf-8")
+    logger.success(f"Generated run metadata: {md_file}")
+
+    # Also save JSON version for programmatic access
+    json_file = output_dir / "_RUN_METADATA.json"
+    metadata_dict = metadata.model_dump(mode="json")
+    # Convert datetime to ISO format string
+    if isinstance(metadata_dict.get("timestamp"), datetime):
+        metadata_dict["timestamp"] = metadata_dict["timestamp"].isoformat()
+
+    with open(json_file, 'w') as f:
+        json.dump(metadata_dict, f, indent=2)
+    logger.debug(f"Saved metadata JSON: {json_file}")
+
+
+def update_runs_comparison_md(
+    eval_results_dir: Path,
+    metadata: TestRunMetadata,
+    results: Dict[str, Any]
+) -> None:
+    """Update RUNS_COMPARISON.md with new run data.
+
+    Args:
+        eval_results_dir: Path to eval_results/ directory
+        metadata: Test run metadata
+        results: Evaluation results dict with output_path
+
+    AICODE-NOTE: Maintains comparison table of all test runs
+    AICODE-NOTE: Shows last 20 runs sorted by timestamp (newest first)
+    """
+    comparison_file = eval_results_dir / "RUNS_COMPARISON.md"
+
+    # Load existing runs
+    runs_data = []
+    if comparison_file.exists():
+        runs_data = _parse_existing_comparison(comparison_file)
+
+    # Add new run
+    output_path = Path(results["output_path"])
+    metrics = _extract_metrics_from_summary(output_path)
+
+    runs_data.append({
+        "run_id": metadata.run_id,
+        "test_mode": metadata.test_mode,
+        "prompt_version": metadata.prompt_version or "-",
+        "generation_model": metadata.generation_model_id if metadata.test_mode == "generation" else "-",
+        "timestamp": metadata.timestamp,
+        "metrics": metrics
+    })
+
+    # Sort by timestamp (newest first) and limit to last 20
+    runs_data.sort(key=lambda x: x["timestamp"], reverse=True)
+    runs_data = runs_data[:20]
+
+    # Generate markdown content
+    md_content = _generate_comparison_table(runs_data)
+
+    # Write file
+    comparison_file.write_text(md_content, encoding="utf-8")
+    logger.success(f"Updated runs comparison: {comparison_file}")
+
+
+def _parse_existing_comparison(comparison_file: Path) -> List[Dict[str, Any]]:
+    """Parse existing RUNS_COMPARISON.md file.
+
+    Args:
+        comparison_file: Path to RUNS_COMPARISON.md
+
+    Returns:
+        List of run data dicts
+
+    AICODE-NOTE: Helper for update_runs_comparison_md
+    """
+    runs_data = []
+    content = comparison_file.read_text(encoding="utf-8")
+
+    # Simple parsing: find table rows (lines starting with |)
+    for line in content.split("\n"):
+        line = line.strip()
+        if line.startswith("|") and not line.startswith("| Run ID"):
+            # Skip header and separator rows
+            if "---" in line or "Run ID" in line:
+                continue
+
+            # Parse table row
+            cells = [c.strip() for c in line.split("|")[1:-1]]  # Skip first and last empty
+            if len(cells) >= 5:
+                try:
+                    # Try to parse timestamp from run_id
+                    run_id = cells[0]
+                    timestamp = datetime.strptime(run_id, "%Y%m%d_%H%M%S")
+
+                    # Extract metrics from correct columns
+                    cos_sim = cells[4] if len(cells) > 4 else "-"
+                    char_ngrams = cells[5] if len(cells) > 5 else "-"
+
+                    runs_data.append({
+                        "run_id": run_id,
+                        "test_mode": cells[1],
+                        "prompt_version": cells[2],
+                        "generation_model": cells[3],
+                        "timestamp": timestamp,
+                        "metrics": {
+                            "cosine_similarity": cos_sim,
+                            "char_ngrams": char_ngrams
+                        }
+                    })
+                except Exception:
+                    # Skip malformed rows
+                    continue
+
+    return runs_data
+
+
+def _extract_metrics_from_summary(output_dir: Path) -> Dict[str, str]:
+    """Extract metrics from summary.json for comparison table.
+
+    Args:
+        output_dir: Path to results directory
+
+    Returns:
+        Dict with metric name -> formatted value
+
+    AICODE-NOTE: Helper for update_runs_comparison_md
+    """
+    summary_json = output_dir / "summary.json"
+    if not summary_json.exists():
+        return {}
+
+    try:
+        with open(summary_json, 'r') as f:
+            summary = json.load(f)
+
+        metrics = {}
+        for name, value in summary.get("mean_metrics", {}).items():
+            if isinstance(value, float):
+                metrics[name] = f"{value:.3f}"
+            else:
+                metrics[name] = str(value)
+
+        return metrics
+    except Exception as e:
+        logger.warning(f"Failed to extract metrics from {summary_json}: {e}")
+        return {}
+
+
+def _generate_comparison_table(runs_data: List[Dict[str, Any]]) -> str:
+    """Generate markdown comparison table from runs data.
+
+    Args:
+        runs_data: List of run data dicts
+
+    Returns:
+        Markdown table content
+
+    AICODE-NOTE: Helper for update_runs_comparison_md
+    """
+    lines = [
+        "# Test Runs Comparison",
+        "",
+        f"Last updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
+        "",
+        "## Recent Runs",
+        "",
+        "| Run ID | Mode | Prompt Ver | Gen Model | Cos Sim | Char N-grams |",
+        "|--------|------|------------|-----------|---------|--------------|"
+    ]
+
+    for run in runs_data:
+        metrics = run.get("metrics", {})
+        cos_sim = metrics.get("cosine_similarity", "-")
+        char_ngrams = metrics.get("char_ngrams", "-")
+
+        # Truncate model name if too long
+        model = run["generation_model"]
+        if len(model) > 15:
+            model = model[:12] + "..."
+
+        lines.append(
+            f"| {run['run_id']} | {run['test_mode'][:4]} | "
+            f"{run['prompt_version'][:10]} | {model} | {cos_sim} | {char_ngrams} |"
+        )
+
+    return "\n".join(lines)

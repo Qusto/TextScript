@@ -11,7 +11,7 @@ Pydantic models for:
 """
 
 from datetime import datetime
-from typing import Dict, Optional
+from typing import Dict, Optional, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
@@ -160,6 +160,49 @@ class JudgeResult(BaseModel):
 
     computed_at: datetime = Field(
         description="Timestamp when judgment was made"
+    )
+
+
+class TestRunMetadata(BaseModel):
+    """Metadata about a single test run.
+
+    AICODE-NOTE: Tracks prompt version, models, and test configuration
+    AICODE-NOTE: Used for run comparison and experiment tracking
+    AICODE-NOTE: Saved as _RUN_METADATA.md in each results directory
+    """
+
+    test_mode: Literal["perfect", "generation"] = Field(
+        description="Test mode: 'perfect' for author baseline, 'generation' for LLM generation"
+    )
+
+    prompt_version: Optional[str] = Field(
+        default=None,
+        description="Prompt version (e.g., 'v1.0', 'v1.1'). None for perfect test mode."
+    )
+
+    prompt_hash: Optional[str] = Field(
+        default=None,
+        description="SHA256 hash of prompt file (first 12 chars). None for perfect test mode."
+    )
+
+    generation_model_id: str = Field(
+        description="Model ID used for article generation"
+    )
+
+    judge_model_id: str = Field(
+        description="Model ID used for LLM-as-Judge evaluation"
+    )
+
+    embedding_model: str = Field(
+        description="Embedding model used for cosine similarity"
+    )
+
+    timestamp: datetime = Field(
+        description="Timestamp when test run started"
+    )
+
+    run_id: str = Field(
+        description="Unique run identifier (format: YYYYMMDD_HHMMSS)"
     )
 
 

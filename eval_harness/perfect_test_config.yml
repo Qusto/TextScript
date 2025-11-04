@@ -11,7 +11,7 @@ judge_model_id: "openai/gpt-4o"
 # Enable ONLY numeric metrics (no API calls needed)
 metrics_numeric:
   cosine_similarity: true
-  bert_score: true
+  bert_score: false  # Disabled: returns NaN values with IDF enabled
   char_ngrams: true  # Character n-grams for stylometry
 
 # Disable LLM judges (require API access)

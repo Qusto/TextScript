@@ -12,14 +12,20 @@ Usage:
 import sys
 import argparse
 import yaml
+import hashlib
 from pathlib import Path
+from datetime import datetime
 
 from loguru import logger
 
 # AICODE-NOTE: Import evaluator components
-from src.evaluator.config import EvalConfig
+from src.evaluator.config import EvalConfig, TestRunMetadata
 from src.evaluator.runner import EvaluationRunner
-from src.evaluator.aggregator import ResultAggregator
+from src.evaluator.aggregator import (
+    ResultAggregator,
+    generate_run_metadata_md,
+    update_runs_comparison_md
+)
 from src.evaluator.integration import UglyScriptAdapter
 from src.evaluator.metrics.numeric import NumericMetrics
 from src.evaluator.metrics.judge import JudgeEvaluator
@@ -85,6 +91,91 @@ def load_config(config_path: Path) -> EvalConfig:
         return config
     except Exception as e:
         raise ValueError(f"Invalid configuration: {e}") from e
+
+
+def compute_file_hash(file_path: Path) -> str:
+    """Compute SHA256 hash of file for version tracking.
+
+    Args:
+        file_path: Path to file
+
+    Returns:
+        Hex string of SHA256 hash (64 characters)
+
+    AICODE-NOTE: Used to detect prompt changes even without versioning
+    """
+    return hashlib.sha256(file_path.read_bytes()).hexdigest()
+
+
+def generate_run_id() -> str:
+    """Generate unique run identifier based on current timestamp.
+
+    Returns:
+        Run ID in format YYYYMMDD_HHMMSS
+
+    AICODE-NOTE: Used as directory name for results
+    """
+    return datetime.now().strftime("%Y%m%d_%H%M%S")
+
+
+def detect_prompt_version(
+    prompt_version_arg: str | None = None,
+    prompts_dir: Path | None = None
+) -> tuple[str, Path]:
+    """Detect prompt version from argument or metadata.yml.
+
+    Args:
+        prompt_version_arg: Explicit version (e.g., 'v1.0', 'current') or None for auto-detect
+        prompts_dir: Path to prompts directory (default: ../../TextScript/prompts)
+
+    Returns:
+        Tuple of (version_string, prompt_file_path)
+
+    Raises:
+        FileNotFoundError: If specified version not found
+
+    AICODE-NOTE: Priority: explicit arg > metadata.yml > hash fallback
+    AICODE-NOTE: prompts_dir param is for testing (dependency injection)
+    """
+    if prompts_dir is None:
+        prompts_dir = Path(__file__).parent.parent / "TextScript" / "prompts"
+
+    metadata_file = prompts_dir / "metadata.yml"
+
+    # Case 1: Explicit version specified
+    if prompt_version_arg:
+        if prompt_version_arg == "current":
+            # Use main file
+            prompt_file = prompts_dir / "article_generation.txt"
+            # Read version from metadata
+            if metadata_file.exists():
+                with open(metadata_file, 'r') as f:
+                    metadata = yaml.safe_load(f)
+                version = metadata.get("current", {}).get("version", "v1.0")
+            else:
+                version = "v1.0"  # Default
+        else:
+            # Use specific version from versions/
+            prompt_file = prompts_dir / "versions" / f"{prompt_version_arg}.txt"
+            if not prompt_file.exists():
+                raise FileNotFoundError(
+                    f"Prompt version not found: {prompt_version_arg}\n"
+                    f"  Expected file: {prompt_file}"
+                )
+            version = prompt_version_arg
+
+    # Case 2: Auto-detect from metadata.yml
+    else:
+        prompt_file = prompts_dir / "article_generation.txt"
+        if metadata_file.exists():
+            with open(metadata_file, 'r') as f:
+                metadata = yaml.safe_load(f)
+            version = metadata.get("current", {}).get("version", "v1.0")
+        else:
+            # Case 3: Fallback to hash
+            version = f"hash-{compute_file_hash(prompt_file)[:8]}"
+
+    return version, prompt_file
 
 
 def initialize_components(config: EvalConfig, perfect_test: bool = False) -> tuple:
@@ -169,6 +260,7 @@ def main() -> None:
 
     AICODE-NOTE: T092 - Implements argparse with all flags
     AICODE-NOTE: T093 - Implements exit codes and error handling
+    AICODE-NOTE: NEW - Supports --test-mode and --prompt-version for experiment tracking
     """
     # AICODE-NOTE: Parse command-line arguments
     parser = argparse.ArgumentParser(
@@ -176,10 +268,17 @@ def main() -> None:
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  python run_eval.py
-  python run_eval.py --config my_config.yml
-  python run_eval.py --author "mark_twain" -v
-  python run_eval.py --verbose
+  # Test 1: Perfect test (author baseline)
+  python run_eval.py --test-mode perfect -v
+
+  # Test 2: Generation test with current prompt
+  python run_eval.py --test-mode generation
+
+  # Test 2: Generation test with specific prompt version
+  python run_eval.py --test-mode generation --prompt-version v1.0
+
+  # Legacy syntax (still works)
+  python run_eval.py --perfect-test -v
         """
     )
 
@@ -188,6 +287,20 @@ Examples:
         type=Path,
         default=Path("./configs/eval_config.yml"),
         help="Path to YAML configuration file (default: ./configs/eval_config.yml)"
+    )
+
+    parser.add_argument(
+        "--test-mode",
+        choices=["perfect", "generation"],
+        default=None,
+        help="Test mode: 'perfect' for author baseline, 'generation' for LLM generation (default: generation)"
+    )
+
+    parser.add_argument(
+        "--prompt-version",
+        type=str,
+        default=None,
+        help="Prompt version (e.g., 'v1.0', 'v1.1', 'current'). Auto-detected from metadata.yml if not specified."
     )
 
     parser.add_argument(
@@ -200,7 +313,7 @@ Examples:
     parser.add_argument(
         "--perfect-test",
         action="store_true",
-        help="Enable perfect test mode - use ground truth as generated output for baseline calibration"
+        help="(Deprecated: use --test-mode=perfect) Enable perfect test mode for baseline calibration"
     )
 
     parser.add_argument(
@@ -213,6 +326,17 @@ Examples:
 
     # AICODE-NOTE: Setup logging
     setup_logging(verbose=args.verbose)
+
+    # AICODE-NOTE: Handle backward compatibility for --perfect-test
+    if args.perfect_test and not args.test_mode:
+        args.test_mode = "perfect"
+        logger.warning(
+            "⚠️  --perfect-test is deprecated, use --test-mode=perfect instead"
+        )
+
+    # AICODE-NOTE: Default to generation mode if not specified
+    if not args.test_mode:
+        args.test_mode = "generation"
 
     try:
         # AICODE-NOTE: Step 1 - Load configuration
@@ -239,9 +363,25 @@ Examples:
 
         logger.info(f"Found {len(author_dirs)} authors in dataset")
 
+        # AICODE-NOTE: Step 2.5 - Detect prompt version (only for generation mode)
+        prompt_version = None
+        prompt_hash = None
+
+        if args.test_mode == "generation":
+            try:
+                prompt_version, prompt_file = detect_prompt_version(args.prompt_version)
+                prompt_hash = compute_file_hash(prompt_file)[:12]
+                logger.info(f"📝 Using prompt version: {prompt_version}")
+                logger.info(f"   Prompt file: {prompt_file}")
+                logger.debug(f"   Prompt hash: {prompt_hash}")
+            except FileNotFoundError as e:
+                logger.error(f"Prompt version error: {e}")
+                sys.exit(EXIT_CONFIG_ERROR)
+
         # AICODE-NOTE: Step 3 - Initialize components
+        perfect_test = (args.test_mode == "perfect")
         try:
-            runner, aggregator = initialize_components(config, perfect_test=args.perfect_test)
+            runner, aggregator = initialize_components(config, perfect_test=perfect_test)
         except ImportError as e:
             logger.error(f"Integration error: {e}")
             sys.exit(EXIT_INTEGRATION_ERROR)
@@ -259,19 +399,22 @@ Examples:
             print(f"Filtering by author: {args.author}")
 
         # AICODE-NOTE: T116 - Perfect test mode warning
-        if args.perfect_test:
-            print("\n⚠️  PERFECT TEST MODE ENABLED - Using ground truth as generated output")
-            print("This mode is for baseline calibration only. Expected metrics:")
-            print("  - Cosine similarity: ≥0.99")
-            print("  - BERTScore F1: ≥0.98")
-            print("  - Content/Style scores: 5/5")
+        if args.test_mode == "perfect":
+            print("\n⚠️  PERFECT TEST MODE ENABLED - Using source texts as generated output")
+            print("This mode establishes author style baseline. Expected metrics:")
+            print("  - Char N-grams: ~0.99 (same author style)")
+            print("  - Cosine similarity: 0.40-0.60 (different content, same style)")
+        else:
+            print(f"\n📝 GENERATION MODE - Testing prompt version: {prompt_version}")
+            if prompt_hash:
+                print(f"   Prompt hash: {prompt_hash}")
 
         print()
 
         try:
             results = runner.run_evaluation(
                 author_filter=args.author,
-                perfect_test=args.perfect_test  # AICODE-NOTE: T117 - Pass perfect test flag
+                perfect_test=perfect_test  # AICODE-NOTE: T117 - Pass perfect test flag
             )
         except FileNotFoundError as e:
             logger.error(f"Dataset error: {e}")
@@ -294,6 +437,22 @@ Examples:
         try:
             aggregator.generate_summary_csv(output_dir)
             aggregator.generate_summary_md(output_dir)
+
+            # AICODE-NOTE: NEW - Generate run metadata
+            metadata = TestRunMetadata(
+                test_mode=args.test_mode,
+                prompt_version=prompt_version,
+                prompt_hash=prompt_hash,
+                generation_model_id=config.generation_model_id,
+                judge_model_id=config.judge_model_id,
+                embedding_model=config.embedding_model,
+                timestamp=datetime.now(),
+                run_id=output_dir.name  # Use directory name as run_id
+            )
+
+            generate_run_metadata_md(output_dir, metadata, results)
+            update_runs_comparison_md(Path("eval_results"), metadata, results)
+
         except OSError as e:
             logger.error(f"Filesystem error writing summary: {e}")
             sys.exit(EXIT_FILESYSTEM_ERROR)
