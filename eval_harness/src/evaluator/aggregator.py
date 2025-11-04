@@ -240,7 +240,7 @@ class ResultAggregator:
         # AICODE-NOTE: Write CSV file
         csv_file = results_dir / "_SUMMARY.csv"
         with open(csv_file, 'w', newline='', encoding='utf-8') as f:
-            fieldnames = ["author", "case", "cosine_sim", "bert_f1", "content_score", "style_score"]
+            fieldnames = ["author", "case", "cosine_sim", "bert_f1", "char_ngrams", "content_score", "style_score"]
             writer = csv.DictWriter(f, fieldnames=fieldnames)
 
             writer.writeheader()
